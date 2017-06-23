@@ -15,6 +15,7 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
   # Outputs: 
   # 1. Fig. 3 showing the distributions of modeled and observated stream widths. 
   
+  
   ############################################
   # automatically install and load libraries:
   if (!"foreign" %in% rownames(installed.packages())) {install.packages("foreign")}; require(foreign)
@@ -23,14 +24,26 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
   
   trampushCSVpath = paste0('E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/Trampush_etal_2014_WRR_sup_Bankful_W_Q.csv')
   
-  fieldtopoPaths = fieldtopoPaths[c(1,2,3,4,6,7)]
-
-  catchNames = sub("_field_dat.csv", "", basename(fieldtopoPaths))
+  fieldtopoPaths = c(
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/konza_field_dat.csv',
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/sagehen_field_dat.csv',
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/angelo_field_dat.csv',
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/caribou_field_dat.csv',
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/blueduck_field_dat.csv',
+    'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/fieldAndTopoData/stony_field_dat.csv'
+  )
   
+  catchNames = sub("_field_dat.csv", "", basename(fieldtopoPaths))
+ 
   ##############################################
   
-  # set Manning's n = 0.04 and convert it to Parker's k:
+  # set Manning's:
   MannN = 0.04
+  
+  # Earth's gravity (m/s^2):
+  g = 9.81 
+  
+  # convert Manning's n to Parking's k:
   k = (8.1 * g^0.5 * MannN)^6
   
   # analyze Trampush etal (2014) bankful width drainage area relationship:
@@ -70,24 +83,26 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
   
   
   ############################################
-  # plot the first panel, showing relationship between channel shape
-  # and the channel shape parameter, s:
+  # plot the schematic first panel, showing relationship between channel shape
+  # and the channel shape parameter, r:
   chanShapePlot(w = seq(0, 1, length.out=50), 
                 w2dratio = 8,
-                s = c(1, 2, 5, 10), # shape parameter
+                r = c(1, 2, 5, 10), # shape parameter
                 waterLevel = 1.09,
                 colfield = F) 
   
   ############################################
   # plot model and observed width distributions: 
   # for each basin, model widths and compare to observations:
-  for (i in 1:length(fieldtopoPaths)){
-
-    tab = tableReader(fieldtopoPaths[i])
+  for (i in c(1,2,3,5,6)){
     
-    # generate a population of s from a given distribution:
-    s = runif(nrow(tab), 1, 8)
-    #s = rnorm(nrow(tab), 5, 2)
+    print(paste0(i, '... ', catchNames[i]))
+    # read in data table:
+    tab = tableReader(fieldtopoPath = fieldtopoPaths[i])
+    
+    # generate a population of r from a given distribution:
+    r = runif(nrow(tab), 1, 10)
+    #r = rnorm(nrow(tab), 5, 2)
   
     WDR = median(trampushW2H, na.rm=T)
 
@@ -101,7 +116,7 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
                       S = abs(tab$slopes), 
                       k = k, # m; roughness length scale from Parker (1991)
                       bfWidth2DepthRatio = WDR, 
-                      s = s
+                      r = r
                     )
     
     # remove any infinite or zero width values. These are rare but 
@@ -122,7 +137,7 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
     zeroWidths = which(tab$w==0)
     tab$w = wMod_raw
     tab$w[zeroWidths] = 0
-    tab$s = s
+    tab$r = r
     #tabOutPath = 'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/mapsOfModelWidths/mapTab.csv'
     write.csv(tab, csvOut, row.names=T)
     
@@ -137,187 +152,195 @@ fig3_widthModel <- function(fieldtopoPaths, csvOut, pdfOut){
   cmd = paste('open', pdfOut)
   system(cmd)
 
+}
+
+
+##############################################
+# functions:
+
+chanShapePlot = function(w, w2dratio, r, waterLevel, colfield=F){
   
-  ##############################################
-  # functions:
+  # plot the width-height relationship with different shape parameters
+  wbf = max(w)
+  hbf = 2*wbf/w2dratio
+  N = length(w)
+  lev = round(N/waterLevel)
   
-  chanShapePlot = function(w, w2dratio, s, waterLevel, colfield=F){
-    
-    # plot the width-height relationship with different shape parameters
-    wbf = max(w)
-    hbf = 2*wbf/w2dratio
-    N = length(w)
-    lev = round(N/waterLevel)
-    
-    # for color-field image:
-    if (colfield ==T){
-      x = seq(min(s), max(s), length.out=1e2)
-      lx = x^2
-      s = (lx-min(lx))/(max(lx)-min(lx))*(max(x)-min(x))+min(x)
-    }
-    n = length(s)
-    cols = rainbow(n)
-    
-    # plot width-height relationship with different shape params:
-    # first part:
-    plot(c(-1*wbf, wbf), c(0, hbf), type='n', las=1,
-         xlab = "Channel width", ylab = "Channel height",
-         ann=F, axes=F,
-         main="Modeled channel geometries")
-    for (i in 1:n){
-      h = hbf*(w/wbf)^s[i]
-      lines(c(rev(-1*w), w), c(rev(h), h), col=cols[i])
-    }
-    if(n < 5){
-      legVals = as.vector(quantile(s, seq(0,1,length.out=n)))
-    }else{
-      legVals = as.vector(quantile(s, seq(0,1,length.out=4)))
-    }
-    legend("top", paste("s =", floor(legVals)), col = rainbow(5),
-           lty = c(1,1), merge = T, xjust=1, cex=0.8, box.col = NA)
-    
-    # second part: 
-    plot(c(-1*wbf, wbf), c(0, hbf), type='n', las=1,
-         ann=F, axes=F)
-    h = hbf*(w/wbf)^legVals[3]
-    polygon(c(rev(-1*w[-c(lev:N)]), w[-c(lev:N)]), 
-            c(rev(h[-c(lev:N)]), h[-c(lev:N)]), 
-            col=rgb(0.85,0.95,1,1), border=1)
-    lines(c(rev(-1*w), w), c(rev(h), h), col=1, lwd=1.4)
-  
+  # for color-field image:
+  if (colfield ==T){
+    x = seq(min(r), max(r), length.out=1e2)
+    lx = x^2
+    r = (lx-min(lx))/(max(lx)-min(lx))*(max(x)-min(x))+min(x)
   }
+  n = length(r)
+  cols = rainbow(n)
   
-  
-  trampush_WidthAreaRegression <- function(trampushCSVpath, plot=FALSE){
-  
-    # fits a least squares regression on Trampush et al., (2014) data. 
-    csv = read.csv(trampushCSVpath, header=T)
-    
-    # exclude rows with no data: 
-    notNA = !is.na(csv$DA..km2.) & !is.na(csv$Wbf..m.)
-    A = csv$DA..km2.[notNA]*1e6 # convert km2 to m2
-    w = csv$Wbf..m.[notNA] 
-    
-    # take natural log of width and area data and run regression:
-    lA = log(A)
-    lw = log(w)
-    model = lm(lw~lA)
-    
-    # plot regression and print statistical summary:
-    if(plot==T){
-      plot(A, w, log='xy',
-           xlab="Drainge Area (m2)", 
-           ylab="Bankfull Width (m)",
-           pch=16, cex=.5)
-      par(new=T)
-      plot(lA, lw, type='n', 
-           xlab='', ylab='', axes=F,
-           main="Trampush et al. (2014)")
-      abline(model, col=2, lwd=1.8)
-      print("Trampush area-width regression statistical summary:")
-      print(summary(model))
-    }
-    
-    list = list(
-      model=model, 
-      W2Hratio=csv$Wbf..m./csv$Hbf..m., 
-      A_m2=A
-    )
-    
-    return(list)
-  
+  # plot width-height relationship with different shape params:
+  # first part:
+  plot(c(-1*wbf, wbf), c(0, hbf), type='n', las=1,
+       xlab = "Channel width", ylab = "Channel height",
+       ann=F, axes=F,
+       main="Modeled channel geometries")
+  for (i in 1:n){
+    h = hbf*(w/wbf)^r[i]
+    lines(c(rev(-1*w), w), c(rev(h), h), col=cols[i])
   }
-  
-  
-  tableReader <- function(fieldtopoPath){
-  
-    # read in and process input table.
-    tab = data.frame(read.csv(inTabPaths[i], skip=49))
-    tab$percent_nonflow[is.na(tab$percent_nonflow)] = 0
-    w = tab$flowing_width*(1-tab$percent_nonflow/100)
-    w[grep('RF', tab$code)] = w[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
-    tab$w = w * 2.54 # inches to cm convert
-    notZero = w != 0
-    tab = tab[notZero, ]
-    
-    return(tab)
-    
-    }
-    
-    
-    widthModel <- function(a, A, b, Q, g, S, k, bfWidth2DepthRatio, s){
-    
-    # Equation 3 that models stream width:
-    w = Q ^ (3/(5*s+3)) *
-      (a*A^b) ^ ((s-1)/(s+3/5)) *
-      (8.1 * 
-         (g * S)^(1/2) * 
-         k^(-1/6) *
-         (1/bfWidth2DepthRatio)^(5/3) * 
-         (1-1/(s+1))) ^ (-3/(5*s+3))
-    
-    return(w)
-    
-    }
-    
-    
-    binInterval = 10 # cm; histogram bin size
-    
-    distribAnalyzer <- function(widths, binInterval){
-    
-    xMax = max(widths)+binInterval
-    breaks = seq(0, xMax, binInterval)
-    h = hist(widths, breaks, plot=F)
-    fit = fitdistr(widths, "log-normal")$estimate # MLE lognormal distr
-    lineSeq = seq(0, xMax, length=5e2) # sequence for line
-    dln = dlnorm(lineSeq, fit[1], fit[2]) # densities
-    fln = dln*length(widths)*binInterval # frequencies
-    
-    list = list(h=h, fln=fln, fit=fit, length=length(widths))
-    
-    return(list)
-  
+  if(n < 5){
+    legVals = as.vector(quantile(r, seq(0,1,length.out=n)))
+  }else{
+    legVals = as.vector(quantile(r, seq(0,1,length.out=4)))
   }
+  legend("top", paste("r =", floor(legVals)), col = rainbow(5),
+         lty = c(1,1), merge = T, xjust=1, cex=0.8, box.col = NA)
   
+  # second part: 
+  plot(c(-1*wbf, wbf), c(0, hbf), type='n', las=1,
+       ann=F, axes=F)
+  h = hbf*(w/wbf)^legVals[3]
+  polygon(c(rev(-1*w[-c(lev:N)]), w[-c(lev:N)]), 
+          c(rev(h[-c(lev:N)]), h[-c(lev:N)]), 
+          col=rgb(0.85,0.95,1,1), border=1)
+  lines(c(rev(-1*w), w), c(rev(h), h), col=1, lwd=1.4)
+}
+
+
+trampush_WidthAreaRegression <- function(trampushCSVpath, plot=FALSE){
   
-  distribPlotter <- function(modelFit, observedFit, binInterval, plotXmax=NA, catchName, i){
+  # fits a least squares regression on Trampush et al., (2014) data. 
+  csv = read.csv(trampushCSVpath, header=T)
   
-    # calculate plot limits: 
-    if (is.na(plotXmax)){
-      xlim = c(0, max(c(modelFit$h$breaks, observedFit$h$breaks)))
-    }else{
-      xlim = c(0, plotXmax)
-    }
-    ylim = c(0, max(c(modelFit$h$counts, modelFit$fln, 
-                      observedFit$h$counts, observedFit$fln)))
-    
-    # plot histograms: 
-    plot(observedFit$h,
-         xlim=xlim, ylim=ylim, 
-         xlab="Stream width (cm)", ylab="N", las=1,
-         col='gray', border=0, main='')
-    title(paste0(letters[i], '. ', catchName), adj=0)
+  # exclude rows with no data: 
+  notNA = !is.na(csv$DA..km2.) & !is.na(csv$Wbf..m.)
+  A = csv$DA..km2.[notNA]*1e6 # convert km2 to m2
+  w = csv$Wbf..m.[notNA] 
+  
+  # take natural log of width and area data and run regression:
+  lA = log(A)
+  lw = log(w)
+  model = lm(lw~lA)
+  
+  # plot regression and print statistical summary:
+  if(plot==T){
+    plot(A, w, log='xy',
+         xlab="Drainge Area (m2)", 
+         ylab="Bankfull Width (m)",
+         pch=16, cex=.5)
     par(new=T)
-    plot(modelFit$h,
-         xlim=xlim, ylim=ylim, 
-         axes=F, main="", xlab="", ylab="", 
-         border=2, col=2, density=20)
-    
-    # plot lognormal fit lines:
-    lineSeq = seq(0, xlim[2], length=5e2)
-    dln = dlnorm(lineSeq, observedFit$fit[1], observedFit$fit[2]) # densities
-    fln = dln*observedFit$length*binInterval # frequencies
-    lines(lineSeq, fln, lty=1, col=1, lwd=1.5)
-    
-    dln = dlnorm(lineSeq, modelFit$fit[1], modelFit$fit[2]) # densities
-    fln = dln*modelFit$length*binInterval # frequencies
-    lines(lineSeq, fln, col=2, lwd=1.8)
-    
-    if (i == 1){
-      legend("topright", c("model", "observed"), col = c(2, 1),
-             lty = c(1,1), merge = T, xjust=1, cex=0.8)
-    }
+    plot(lA, lw, type='n', 
+         xlab='', ylab='', axes=F,
+         main="Trampush et al. (2014)")
+    abline(model, col=2, lwd=1.8)
+    print("Trampush area-width regression statistical summary:")
+    print(summary(model))
+  }
   
+  list = list(
+    model=model, 
+    W2Hratio=csv$Wbf..m./csv$Hbf..m., 
+    A_m2=A
+  )
+  
+  return(list)
+  
+}
+
+
+tableReader <- function(fieldtopoPath){
+  
+  # read in and process input table.
+  tab = read.csv(fieldtopoPath, header=T)
+  tab$percent_nonflow[is.na(tab$percent_nonflow)] = 0
+  w = tab$flowing_width*(1-tab$percent_nonflow/100)
+  w[grep('RF', tab$code)] = w[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
+  tab$w = w * 2.54 # inches to cm convert
+  notZero = w != 0
+  tab = tab[notZero, ]
+  
+  return(tab)
+  
+}
+
+
+widthModel <- function(a, A, b, Q, g, S, k, bfWidth2DepthRatio, r){
+  
+  # Equation 3 that models stream width:
+  w = Q ^ (3/(5*r+3)) *
+    (a*A^b) ^ ((r-1)/(r+3/5)) *
+    (8.1 * 
+       (g * S)^(1/2) * 
+       k^(-1/6) *
+       (1/bfWidth2DepthRatio)^(5/3) * 
+       (1-1/(r+1))) ^ (-3/(5*r+3))
+  
+  return(w)
+  
+}
+
+
+binInterval = 10 # cm; histogram bin size
+
+distribAnalyzer <- function(widths, binInterval){
+  
+  xMax = max(widths)+binInterval
+  breaks = seq(0, xMax, binInterval)
+  h = hist(widths, breaks, plot=F)
+  fit = fitdistr(widths, "log-normal")$estimate # MLE lognormal distr
+  lineSeq = seq(0, xMax, length=5e2) # sequence for line
+  dln = dlnorm(lineSeq, fit[1], fit[2]) # densities
+  fln = dln*length(widths)*binInterval # frequencies
+  
+  list = list(h=h, fln=fln, fit=fit, length=length(widths))
+  
+  return(list)
+  
+}
+
+
+
+
+
+distribPlotter <- function(modelFit, observedFit, binInterval, plotXmax=NA, catchName, i){
+  
+  # calculate plot limits: 
+  if (is.na(plotXmax)){
+    xlim = c(0, max(c(modelFit$h$breaks, observedFit$h$breaks)))
+  }else{
+    xlim = c(0, plotXmax)
+  }
+  ylim = c(0, max(c(modelFit$h$counts, modelFit$fln, 
+                    observedFit$h$counts, observedFit$fln)))
+  
+  # plot histograms: 
+  plot(observedFit$h,
+       xlim=xlim, ylim=ylim, 
+       xlab="Stream width (cm)", ylab="N", las=1,
+       col='gray', border=0, main='')
+  title(paste0(letters[i], '. ', catchName), adj=0)
+  par(new=T)
+  plot(modelFit$h,
+       xlim=xlim, ylim=ylim, 
+       axes=F, main="", xlab="", ylab="", 
+       border=2, col=2, density=20)
+  
+  # plot lognormal fit lines:
+  lineSeq = seq(0, xlim[2], length=5e2)
+  dln = dlnorm(lineSeq, observedFit$fit[1], observedFit$fit[2]) # densities
+  fln = dln*observedFit$length*binInterval # frequencies
+  lines(lineSeq, fln, lty=1, col=1, lwd=1.5)
+  
+  dln = dlnorm(lineSeq, modelFit$fit[1], modelFit$fit[2]) # densities
+  fln = dln*modelFit$length*binInterval # frequencies
+  lines(lineSeq, fln, col=2, lwd=1.8)
+  
+  if (i == 1){
+    legend("topright", c("model", "observed"), col = c(2, 1),
+           lty = c(1,1), merge = T, xjust=1, cex=0.8)
   }
   
 }
+
+
+
+
+
+
