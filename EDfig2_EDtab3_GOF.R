@@ -1,12 +1,15 @@
-EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
+EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
   
-  # EDfig2_EDtab3_GOF.R 
+  options(warn=-1)
+  
+  # ED_fig2_tab3_GOF.R 
   # George Allen, Feb 2016
   print(paste("Generating ED Fig. 2 - GOF of sample distributions"))
   
   #################################################################
   # required packages:
   require(MASS)
+  
   
   #################################################################
   # custom graphing parameters: 
@@ -24,7 +27,8 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
             "gshape", "rate",  "gX2", "gX2p", "gKS_D", "gKS_p", 
             "meanln", "sdlog", "lnX2", "lnX2p", "lnKS_D", "lnKS_p", 
             "wshape", "scale", "wX2", "wX2p", "wKS_D", "wKS_p", 
-            "pXmin", "pAlpha", "pX2", "pX2p", "pKS_D", "pKS_p") 
+            "pXmin", "pAlpha", "pX2", "pX2p", "pKS_D", "pKS_p",
+            "modMean", "modSD", "modX2", "modX2p", "modKS_D", "modKS_p") 
   statTab = data.frame(array(NA, c(13, length(names))))
   names(statTab) = names
   
@@ -73,6 +77,9 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
     
     # set up x sequence to plot lines:
     lineSeq = seq(0, ceiling(max(w)/dlnInt)*dlnInt, dlnInt)
+    
+    # get list of model table paths:
+    modTabPaths = list.files(modTabDir, '.csv', full.names=T)
     
     #################################################################
     # Distribution fitting with maximum liklihood estimation:
@@ -126,6 +133,30 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
     weibks = ks.test(jw, "pweibull", wfit[1], wfit[2], alternative="two.sided")
     # pareto
     parks = pareto.test(jw[jw>minW], minW, 2e2) #modeW
+    
+    
+    #################################################################
+    # Quantify differences between surveyed widths to modeled widths (Fig. 3):
+    # if a file contained model data exists, read in:
+    modTabPath = modTabPaths[grep(tabNames[i], modTabPaths, ignore.case=T)]
+    
+    if (length(modTabPath) > 0){
+      modTab = read.csv(modTabPath, header=T)
+      # remove any infinite or zero width values. These are rare but 
+      # trip up fitting a lognormal distribution to the data:
+      finiteWidths = modTab$w_model > 0 & modTab$w_model < 1e5 & is.finite(modTab$w_model)
+      # MLE fit lognormal distribution to modeled width data:
+      modFit = distribAnalyzer(widths=modTab$w_model[finiteWidths], binInterval=10)$fit
+      # Pearson's Chi-squared test for count data:
+      modChi = chisq.test(modTab$flowing_width[finiteWidths], modTab$w_model[finiteWidths]) # low p-value signifies a good fit
+      # Kolmogorov-Smirnov test bewteen raw model and observed data:
+      modks = ks.test(modTab$flowing_width,  modTab$w_model)
+    } else {
+      modFit[[1]] = modFit[[2]] = 
+        modChi$statistic[[1]] = modChi$p.value[[1]] =
+        modks$statistic[[1]] = modks$p.value[[1]][[1]] = NA
+    }
+    
   
     #################################################################
     # add distribution fit and GOF statastics to a table:
@@ -133,7 +164,8 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
                      gfit[[1]], gfit[[2]], gChi$statistic[[1]], gChi$p.value[[1]], gamks$statistic[[1]], gamks$p.value[[1]],
                      lnfit[[1]], lnfit[[2]], lnChi$statistic[[1]], lnChi$p.value[[1]], lnks$statistic[[1]], lnks$p.value[[1]][[1]],
                      wfit[[1]],  wfit[[2]], wChi$statistic[[1]], wChi$p.value[[1]], weibks$statistic[[1]], weibks$p.value[[1]],
-                     parfit[[1]], parfit[[2]], parChi$statistic[[1]], parChi$p.value[[1]], parks$D[[1]], parks$p[[1]])
+                     parfit[[1]], parfit[[2]], parChi$statistic[[1]], parChi$p.value[[1]], parks$D[[1]], parks$p[[1]],
+                     modFit[[1]], modFit[[2]], modChi$statistic[[1]], modChi$p.value[[1]], modks$statistic[[1]], modks$p.value[[1]][[1]])
     
     #################################################################
     # Plot figure:
@@ -215,7 +247,9 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
     
   }
   
-  # open up PDF:
+  options(warn=0)
+  
+  # display PDF:
   dev.off()
   cmd = paste('open', pdfOut)
   system(cmd)
@@ -228,9 +262,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
   write.csv(oTab, csvOut)
   cmd = paste('open', csvOut)
   system(cmd)
-  
-  
-  
   
   #################################################################
   # specialized functions for the pareto fit:
@@ -268,6 +299,22 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, tabNames, pdfOut, csvOut) {
     return(list(xm = a$xm, a = a$a, D = D, p = sum(emp.D > D)/B))
   }
   
+  # used to analyze distribution of modeled widths:
+  distribAnalyzer <- function(widths, binInterval){
+    
+    xMax = max(widths)+binInterval
+    breaks = seq(0, xMax, binInterval)
+    h = hist(widths, breaks, plot=F)
+    fit = fitdistr(widths, "log-normal")$estimate # MLE lognormal distr
+    lineSeq = seq(0, xMax, length=5e2) # sequence for line
+    dln = dlnorm(lineSeq, fit[1], fit[2]) # densities
+    fln = dln*length(widths)*binInterval # frequencies
+    
+    list = list(h=h, fln=fln, fit=fit, length=length(widths))
+    
+    return(list)
+    
+  }
   
 }
 

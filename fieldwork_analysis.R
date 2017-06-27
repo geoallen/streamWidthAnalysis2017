@@ -66,11 +66,11 @@ csvOut = paste0(workingDir, '/tables/EDtable1.csv')
 EDtable_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
-source(paste0(workingDir, '/R/EDfig2_tab3_GOF.R'))
+source(paste0(workingDir, '/R/EDfig2_EDtab3_GOF.R'))
 modTabDir = paste0(workingDir, '/tables')
 pdfOut = paste0(workingDir, '/figures/EDfig2_GOF.pdf')
 csvOut = paste0(workingDir, '/tables/EDtable3_GOF.csv')
-ED_fig2_tab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
+EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
 
 # ED table 4 - efflux calculation:
 source(paste0(workingDir, '/R/EDtable3.R'))
