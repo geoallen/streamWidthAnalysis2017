@@ -5,6 +5,6 @@ Contains R code used to analyze the data and produce figures presented in Allen 
 to run:
 1. Download all data and codes into the same working directory. 
 2. Open top level R script: "smallStreamsAnalysis.R".
-3. Set workingDir variable as your working directory path. 
-4. Select and run code to reproduce figures and analysis.
+3. Set workingDir variable to your working directory path. 
+4. Run code to reproduce figures and analysis.
 
