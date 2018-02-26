@@ -1,4 +1,4 @@
-<b>allen-et -al-headwater-stream-widths-distributions-study</b>
+<b>streamWidthAnalysis2017</b>
 
 <b> Description</b>
 This repository contains R code used to analyze the data and produce figures presented in:
@@ -10,4 +10,3 @@ Allen et al. (2018) "Similarity of stream width distributions across headwater s
 - Open R script: "smallStreamsAnalysis.R".
 - Set workingDir variable to your working directory path. 
 - Run code to reproduce figures and analysis.
-
