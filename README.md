@@ -2,7 +2,7 @@
 
 <b> Description:</b><br>
 This repository contains R code used to analyze the data and produce figures presented in:
-Allen et al. (2018) "Similarity of stream width distributions across headwater systems" DOI: <a href="https://www.nature.com/articles/s41467-018-02991-w">10.1038/s41467-018-02991-w</a>.
+Allen et al. (2018) "Similarity of stream width distributions across headwater systems" published in <i>Nature Communications</i> (DOI: <a href="https://www.nature.com/articles/s41467-018-02991-w">10.1038/s41467-018-02991-w</a>).
 
 
 <b>To run:</b>
