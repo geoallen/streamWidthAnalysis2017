@@ -34,7 +34,7 @@ repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
 loc_paths = here('locationStreamSurveys', paste0(locNames, '.csv'))
 rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
 inTabPaths = c(loc_paths, rep_paths)
-# inQRecordPaths = paste0(workingDir, '/', fNames, 'discharge_records/') # is this essential? I can't immediately see where it gets used but these data are not in the repo.
+# inQRecordPaths = here('', fNames, 'discharge_records/') # is this essential? I can't immediately see where it gets used but these data are not in the repo.
 if (F %in% file.exists(inTabPaths)){message("Field Data CSV files are missing")}
 
 # figure labels:
@@ -48,23 +48,28 @@ tabNames = c('Kings', 'Sagehen', 'Elder', "Caribou", "V40", "Blue Duck", "Stony"
 if(!file.exists(here('figures'))) {dir.create(here('figures')); message("'figures' directory did not exist. Creating...")} # checks for "figures" folder and creates it if it doesnt exist.
 
 # Figure 1 - stream width map generator:
-source(paste0(workingDir, '/fig1_widthMap.R'))
-pdfOut = paste0(workingDir, '/figures/widthMap.pdf')
+source(here('fig1_widthMap.R'))
+pdfOut = here('figures', 'widthMap.pdf')
 fig1_widthMap(inTabPaths, tabNames, pdfOut) # we have a memory issue with this one. It crashed R for me...
 
+# This one ^ refers to GIS data that isn't provided in the repo...
+
 # Figure 2 - stream width distributions:
-source(paste0(workingDir, '/fig2_distributions.R'))
-pdfOut = paste0(workingDir, '/figures/fig2_distributions.pdf')
+# this one put functions last. they should be first, or put somewhere else. Otherwise the function doesn't know what they are and it throws an error.
+# Was this working on your machine?
+source(here('fig2_distributions.R'))
+pdfOut = here('figures', 'fig2_distributions.pdf')
 fig2_distributions(inTabPaths, tabNames, pdfOut)
 
 # Figure 3 - modeled stream widths:
-source(paste0(workingDir, '/fig3_widthModel.R'))
-pdfOut = paste0(workingDir, '/figures/fig3_widthModel4_3.pdf')
-csvOut = paste0(workingDir, '/tables/modeledWidthTab4_3')
+# this one has hardwired paths to some result.
+# it also puts functions last. They can be last if they're outside the function call...
+source(here('fig3_widthModel.R'))
+pdfOut = here('figures', 'fig3_widthModel4_3.pdf')
+csvOut = here('tables', 'modeledWidthTab4_3.csv')
 fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 
 # Figure 4 was produced in Adobe Illustrator
-
 
 #############################################################################################
 # Extended Data Figures and Tables:
@@ -74,18 +79,18 @@ if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' 
 # ED Figure 1 was produced in Adobe Illustrator
 
 # ED table 1 and table 2 - catchment attributes:
-source(paste0(workingDir, '/EDtable_catchment_attributes.R'))
-csvOut = paste0(workingDir, '/tables/EDtable1.csv')
+source(here('EDtable_catchment_attributes.R'))
+csvOut = here('tables', 'EDtable1.csv')
 EDtable_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
-source(paste0(workingDir, '/EDfig2_EDtab3_GOF.R'))
-modTabDir = paste0(workingDir, '/tables')
-pdfOut = paste0(workingDir, '/figures/EDfig2_GOF.pdf')
-csvOut = paste0(workingDir, '/tables/EDtable3_GOF.csv')
+source(here('EDfig2_EDtab3_GOF.R'))
+modTabDir = here('tables')
+pdfOut = here('figures', 'EDfig2_GOF.pdf')
+csvOut = here('tables', 'EDtable3_GOF.csv')
 EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
 
 # ED table 4 - efflux calculation:
-source(paste0(workingDir, '/EDtable3.R'))
-csvOut = paste0(workingDir, '/tables/EDtable3.csv')
+source(here('EDtable3.R'))
+csvOut = here('tables', 'EDtable3.csv')
 EDtable4(inTabPaths, tabNames, csvOut, workingDir)
