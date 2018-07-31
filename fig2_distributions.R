@@ -113,7 +113,7 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
   # Plot panels a-h:
   for (i in 1:length(inTabPaths)){
 
-    print(i)
+    # print(i)
 
     # import and process data:
     w = tabReader(inTabPaths[i])
@@ -206,9 +206,11 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
   title("i. All surveys", adj=0, line=1, cex=0.8, font=2)
 
   dev.off()
-  cmd = paste('open', pdfOut); system(cmd)
+  # cmd = paste('open', pdfOut); system(cmd) # this is not OS-agnostic
 
+  message('Listing fitting parameters for each width distribution...')
   print(fitParams)
-  # write.csv(fitParams, here('tables', 'lognormal_fitParameters.csv', row.names=F)
+  write.csv(fitParams, here('tables', 'lognormal_fitParameters.csv'), row.names=F)
+  message(paste('"fig2_distributions.pdf" can be found at: \n', pdfOut))
 
 }

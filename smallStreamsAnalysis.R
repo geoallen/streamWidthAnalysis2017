@@ -21,7 +21,7 @@ require(here) # for easy relative path management.
 
 # contains pointers to run:
 
-workingDir = '/home/eric/Dropbox/programs/git_repos/streamWidthAnalysis2017'
+# workingDir = '/home/eric/Dropbox/programs/git_repos/streamWidthAnalysis2017'
 
 # data table file names:
 
@@ -42,10 +42,13 @@ tabNames = c('Kings', 'Sagehen', 'Elder', "Caribou", "V40", "Blue Duck", "Stony"
              "2015-10-27", "2015-12-09", "2016-02-02",
              "2016-02-14", "2016-03-04a", "2016-03-04b")
 
-#############################################################################################
-# Figure Scripts:
+# make sure folders exist for outputs
 
 if(!file.exists(here('figures'))) {dir.create(here('figures')); message("'figures' directory did not exist. Creating...")} # checks for "figures" folder and creates it if it doesnt exist.
+if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' directory did not exist. Creating...")} # checks for "tables" folder and creates it if it doesnt exist.
+
+#############################################################################################
+# Figure Scripts:
 
 # Figure 1 - stream width map generator:
 source(here('fig1_widthMap.R'))
@@ -74,14 +77,12 @@ fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 #############################################################################################
 # Extended Data Figures and Tables:
 
-if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' directory did not exist. Creating...")} # checks for "tables" folder and creates it if it doesnt exist.
-
 # ED Figure 1 was produced in Adobe Illustrator
 
 # ED table 1 and table 2 - catchment attributes:
-source(here('EDtable_catchment_attributes.R'))
+source(here('EDtab1_EDtab2_catchment_attributes.R'))
 csvOut = here('tables', 'EDtable1.csv')
-EDtable_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
+EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
 source(here('EDfig2_EDtab3_GOF.R'))
