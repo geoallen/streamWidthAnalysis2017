@@ -209,6 +209,6 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
   cmd = paste('open', pdfOut); system(cmd)
 
   print(fitParams)
-  #write.csv(fitParams, 'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/tables/lognormal_fitParameters.csv', row.names=F)
+  # write.csv(fitParams, here('tables', 'lognormal_fitParameters.csv', row.names=F)
 
 }
