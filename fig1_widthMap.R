@@ -256,30 +256,28 @@ fig1_widthMap <- function(inTabPaths, tabNames, pdfOut){
   cmd = paste('open', pdfOut)
   system(cmd)
 
+}
 
-  ############################
-  # functions:
-  insertRow <- function(existingDF, newrow, r) {
-    existingDF[seq(r+1,length(existingDF)+1)] = existingDF[seq(r,length(existingDF))]
-    existingDF[r] = newrow
-    return(existingDF)
+############################
+# functions:
+insertRow <- function(existingDF, newrow, r) {
+  existingDF[seq(r+1,length(existingDF)+1)] = existingDF[seq(r,length(existingDF))]
+  existingDF[r] = newrow
+  return(existingDF)
+}
+
+grouper <- function(x){
+  idx = 1 + cumsum(is.na(x))
+  nonNa = !is.na(x)
+  split(x[nonNa], idx[nonNa])
+}
+
+rotator <- function(x, y, theta, rot_cntr=NULL){
+  M = cbind(x, y)
+  if (is.null(rot_cntr)){
+    rot_cntr = colMeans(M, na.rm=T)
   }
-
-  grouper <- function(x){
-    idx = 1 + cumsum(is.na(x))
-    nonNa = !is.na(x)
-    split(x[nonNa], idx[nonNa])
-  }
-
-  rotator <- function(x, y, theta, rot_cntr=NULL){
-    M = cbind(x, y)
-    if (is.null(rot_cntr)){
-      rot_cntr = colMeans(M, na.rm=T)
-    }
-    a = theta*(pi/180)
-    rotM = matrix(c(cos(a), sin(a), -sin(a), cos(a)), ncol=2)
-    return(t(rotM %*% (t(M) - rot_cntr) + rot_cntr))
-  }
-
-
+  a = theta*(pi/180)
+  rotM = matrix(c(cos(a), sin(a), -sin(a), cos(a)), ncol=2)
+  return(t(rotM %*% (t(M) - rot_cntr) + rot_cntr))
 }

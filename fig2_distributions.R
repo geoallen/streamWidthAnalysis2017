@@ -15,56 +15,6 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
   require(MASS)
 
   ############################
-  # functions:
-
-  # reads in field data table file, extracts and processes data.
-  # returns stream width measurements in cm:
-  tabReader = function(filePath){
-    tab = data.frame(read.csv(filePath, skip=49))
-    tab$percent_nonflow[is.na(tab$percent_nonflow)] = 0
-    w_raw = tab$flowing_width*(1-tab$percent_nonflow/100)
-    w_raw[grep('RF', tab$code)] = w_raw[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
-    notZero = w_raw!=0
-    w = w_raw[notZero]
-    w = w * 2.54 # inches to cm convert
-    return(w)
-  }
-
-  # takes in width data, the X spacing interval of the lines
-  # that will be plotted, and optionally the maximum X and Y
-  # values of plot. Returns the maximum X and Y values (if they
-  # are not already definied), the X vector used to plot lines,
-  # and density and frequency vectors along this line:
-  limitCalc = function(w, dlnInt, maxX=NA, maxY=NA){
-
-    # find X limit:
-    if(is.na(maxX)){
-      maxX = ceiling(max(w)/dlnInt)*dlnInt
-    }
-
-    # calculate a sequence used to plot lines:
-    lineSeq = seq(0, ceiling(maxX/dlnInt)*dlnInt, dlnInt)
-
-    # caluclate liklihood at each point along the line:
-    lnfit = fitdistr(w, "log-normal")$estimate
-    dln = dlnorm(lineSeq, lnfit[1], lnfit[2])
-    fln = dln*length(w)*int
-
-    # bin widths:
-    breaks = seq(0, floor(max(w)+int), int)
-    h = hist(w, breaks, plot=F)
-
-    # find y limit:
-    if(is.na(maxY)){
-      maxY = ceiling(max(c(h$counts, fln))/10)*10
-    }
-
-    return(list(maxX=maxX, maxY=maxY, lineSeq=lineSeq,
-                breaks=breaks, lnfit=lnfit, dln=dln, fln=fln))
-
-  }
-
-  ############################
   # user defined parameters:
 
   # colors pallets:
@@ -125,9 +75,9 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
     # calculates the limits of plot and the fitted
     # distribution curves:
     if (i < 8){
-      limit = limitCalc(w, dlnInt)
+      limit = limitCalc(w, dlnInt, int = int)
     }else{
-      limit = limitCalc(w, dlnInt, 350, 70)
+      limit = limitCalc(w, dlnInt, maxX=350, maxY=70, int = int)
     }
 
     # convert limit list items to objects:
@@ -158,12 +108,16 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
          paste0(round(modeW), " cm"), col=lcols[i], cex=0.96, adj=0)
 
     # add title:
-    if (i <= 8){title(paste0(letters[i], '. ', tabNames[i]),
+    if (i < 8){
+      title(paste0(letters[i], '. ', tabNames[i]),
                      adj=0, line=0, cex=0.8, font=2, col.main=lcols[i])
     }
 
-    if (i >= 8){
+    if (i > 8){
       mtext(tabNames[i], adj=0, font=3, cex=0.6, col.main=lcols[i])
+    }
+    if (i == 8) {
+      mtext(paste0(letters[i], '. ', tabNames[i]), adj=0, font=3, cex=0.6, col.main=lcols[i])
     }
 
     # keep track of lognormal fit parameters:
@@ -212,5 +166,55 @@ fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
   print(fitParams)
   write.csv(fitParams, here('tables', 'lognormal_fitParameters.csv'), row.names=F)
   message(paste('"fig2_distributions.pdf" can be found at: \n', pdfOut))
+
+}
+
+############################
+# functions:
+
+# reads in field data table file, extracts and processes data.
+# returns stream width measurements in cm:
+tabReader = function(filePath){
+  tab = data.frame(read.csv(filePath, skip=49))
+  tab$percent_nonflow[is.na(tab$percent_nonflow)] = 0
+  w_raw = tab$flowing_width*(1-tab$percent_nonflow/100)
+  w_raw[grep('RF', tab$code)] = w_raw[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
+  notZero = w_raw!=0
+  w = w_raw[notZero]
+  w = w * 2.54 # inches to cm convert
+  return(w)
+}
+
+# takes in width data, the X spacing interval of the lines
+# that will be plotted, and optionally the maximum X and Y
+# values of plot. Returns the maximum X and Y values (if they
+# are not already definied), the X vector used to plot lines,
+# and density and frequency vectors along this line:
+limitCalc = function(w, dlnInt, maxX=NA, maxY=NA, int){
+
+  # find X limit:
+  if(is.na(maxX)){
+    maxX = ceiling(max(w)/dlnInt)*dlnInt
+  }
+
+  # calculate a sequence used to plot lines:
+  lineSeq = seq(0, ceiling(maxX/dlnInt)*dlnInt, dlnInt)
+
+  # caluclate liklihood at each point along the line:
+  lnfit = fitdistr(w, "log-normal")$estimate
+  dln = dlnorm(lineSeq, lnfit[1], lnfit[2])
+  fln = dln*length(w)*int
+
+  # bin widths:
+  breaks = seq(0, floor(max(w)+int), int)
+  h = hist(w, breaks, plot=F)
+
+  # find y limit:
+  if(is.na(maxY)){
+    maxY = ceiling(max(c(h$counts, fln))/10)*10
+  }
+
+  return(list(maxX=maxX, maxY=maxY, lineSeq=lineSeq,
+              breaks=breaks, lnfit=lnfit, dln=dln, fln=fln))
 
 }

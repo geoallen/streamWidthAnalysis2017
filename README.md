@@ -22,7 +22,6 @@ To insure that the code runs correctly, and your file structure is correct, plea
 ├── fig2_distributions.R
 ├── fig3_widthModel.R
 ├── figures
-│   └── widthMap.pdf
 ├── LICENSE
 ├── locationStreamSurveys
 │   ├── blueduck.csv

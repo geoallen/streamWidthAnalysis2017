@@ -7,197 +7,6 @@
 EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, workingDir) {
 
 
-  #####################################################
-  # functions:
-
-  # R2 statistical test:
-  r2 <- function(Oi, Ei){ 1-(sum((Oi-Ei)^2))/(sum((Oi-mean(Oi))^2)) }
-
-  # analyze gauge data:
-  USGSgauge <- function(qTabPaths, fieldDates, oTab, i){
-    # analyze USGS gauge records:
-    qTab = read.table(paste0(qTabPaths[i], '.txt'), sep="\t", fill=T, skip=14, header=T)[-1,]
-    q = as.numeric(as.vector(qTab[, 4]))*0.0283 # cfs to cms convert
-
-    fieldQ = q[match(fieldDates[i,], qTab$datetime)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-  }
-
-  CPCRW <- function(qTabPaths, fieldDates, oTab, i){
-    # analyze caribou-poker creek gauge data (data from Jay Jones):
-    # converted original xls file to csv in excel and renamed as "daily.csv"
-    # caribou 15 min interval records:
-    qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
-    hourlyQ = qTab$AvgOfDischarge.L.s.*0.001 # L/s to cms convert
-
-    # convert hourly Q to average daily Q:
-    dates = as.vector(unique(qTab$Date.and.Time))
-    q = dates
-    for(j in 1:length(dates)){
-      q[j] = mean(hourlyQ[dates[j] == qTab$Date.and.Time], na.rm=T)
-    }
-    q = as.numeric(q)
-    fieldQ = q[match(fieldDates[i,], dates)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-  }
-
-
-  NZhourly <- function(qTabPaths, fieldDates, oTab, i){
-    # NZ hourly records:
-    qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
-    hourlyQ = qTab$flow_rate_m3.s
-    split = strsplit(as.vector(qTab$date.time), ' ')
-    allDates = rep(NA, nrow(qTab))
-    for (j in 1:length(split)){
-      allDates[j] = split[[j]][1]
-    }
-    # average daily Q:
-    dates = unique(allDates)
-    q = dates
-    for(j in 1:length(dates)){
-      q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
-    }
-
-    fieldQ = q[match(fieldDates[i,], dates)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-  }
-
-
-  NZdaily <- function(qTabPaths, fieldDates, oTab, i){
-    # analyze NZ daily records:
-    qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T, skip=4)
-    q = as.numeric(as.vector(qTab$Discharge..m3.s.))
-    fieldQ = q[match(fieldDates[i,], qTab$Date)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-
-  }
-
-
-  stony <- function(qTabPaths, fieldDates, oTab, i){
-    # converted original xls file to csv in excel and renamed as "daily.csv"
-    qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
-    hourlyQ = qTab$Q..L.s..conversion.using.rating.curve.
-
-    split = strsplit(as.vector(qTab$Timestamp), ' ')
-    allDates = rep(NA, nrow(qTab))
-    for (j in 1:length(split)){
-      allDates[j] = split[[j]][1]
-    }
-
-    # average daily Q:
-    dates = unique(allDates)
-    q = rep(NA, length(dates))
-    for(j in 1:length(q)){
-      q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
-    }
-    q = as.numeric(q)
-    fieldQ = q[match(fieldDates[i,], dates)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-
-  }
-
-
-  stony_sub <- function(qTabPaths, fieldDates, oTab, i){
-    # converted original xls file to csv in excel and renamed as "daily.csv"
-    qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
-    hourlyQ = qTab$Q
-
-    split = strsplit(as.vector(qTab$date), ' ')
-    allDates = rep(NA, nrow(qTab))
-    for (j in 1:length(split)){
-      allDates[j] = split[[j]][1]
-    }
-
-    # average daily Q:
-    dates = unique(allDates)
-    q = rep(NA, length(dates))
-    for(j in 1:length(q)){
-      q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
-    }
-    q = as.numeric(q)
-    fieldQ = q[match(fieldDates[i,], dates)]
-    fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
-    fieldQmean = mean(fieldQrange)
-
-    cdf = ecdf(q)
-    cdfRange = range(100*cdf(fieldQ), na.rm=T)
-    cdfMean = mean(cdfRange)
-
-    oTab$QRecLength_yrs[i] =  round(length(q)/365)
-    oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
-    oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
-    oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
-                                      '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
-
-    return(oTab)
-
-  }
-
   require(MASS)
 
   fieldDates = rbind(# physiographically diverse surveys:
@@ -377,5 +186,197 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
   write.csv(oTab, csvOut)
   cmd = paste('open', csvOut)
   system(cmd)
+
+}
+
+
+#####################################################
+# functions:
+
+# R2 statistical test:
+r2 <- function(Oi, Ei){ 1-(sum((Oi-Ei)^2))/(sum((Oi-mean(Oi))^2)) }
+
+# analyze gauge data:
+USGSgauge <- function(qTabPaths, fieldDates, oTab, i){
+  # analyze USGS gauge records:
+  qTab = read.table(paste0(qTabPaths[i], '.txt'), sep="\t", fill=T, skip=14, header=T)[-1,]
+  q = as.numeric(as.vector(qTab[, 4]))*0.0283 # cfs to cms convert
+
+  fieldQ = q[match(fieldDates[i,], qTab$datetime)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
+}
+
+CPCRW <- function(qTabPaths, fieldDates, oTab, i){
+  # analyze caribou-poker creek gauge data (data from Jay Jones):
+  # converted original xls file to csv in excel and renamed as "daily.csv"
+  # caribou 15 min interval records:
+  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  hourlyQ = qTab$AvgOfDischarge.L.s.*0.001 # L/s to cms convert
+
+  # convert hourly Q to average daily Q:
+  dates = as.vector(unique(qTab$Date.and.Time))
+  q = dates
+  for(j in 1:length(dates)){
+    q[j] = mean(hourlyQ[dates[j] == qTab$Date.and.Time], na.rm=T)
+  }
+  q = as.numeric(q)
+  fieldQ = q[match(fieldDates[i,], dates)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
+}
+
+
+NZhourly <- function(qTabPaths, fieldDates, oTab, i){
+  # NZ hourly records:
+  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  hourlyQ = qTab$flow_rate_m3.s
+  split = strsplit(as.vector(qTab$date.time), ' ')
+  allDates = rep(NA, nrow(qTab))
+  for (j in 1:length(split)){
+    allDates[j] = split[[j]][1]
+  }
+  # average daily Q:
+  dates = unique(allDates)
+  q = dates
+  for(j in 1:length(dates)){
+    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+  }
+
+  fieldQ = q[match(fieldDates[i,], dates)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
+}
+
+
+NZdaily <- function(qTabPaths, fieldDates, oTab, i){
+  # analyze NZ daily records:
+  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T, skip=4)
+  q = as.numeric(as.vector(qTab$Discharge..m3.s.))
+  fieldQ = q[match(fieldDates[i,], qTab$Date)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
+
+}
+
+
+stony <- function(qTabPaths, fieldDates, oTab, i){
+  # converted original xls file to csv in excel and renamed as "daily.csv"
+  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  hourlyQ = qTab$Q..L.s..conversion.using.rating.curve.
+
+  split = strsplit(as.vector(qTab$Timestamp), ' ')
+  allDates = rep(NA, nrow(qTab))
+  for (j in 1:length(split)){
+    allDates[j] = split[[j]][1]
+  }
+
+  # average daily Q:
+  dates = unique(allDates)
+  q = rep(NA, length(dates))
+  for(j in 1:length(q)){
+    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+  }
+  q = as.numeric(q)
+  fieldQ = q[match(fieldDates[i,], dates)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
+
+}
+
+
+stony_sub <- function(qTabPaths, fieldDates, oTab, i){
+  # converted original xls file to csv in excel and renamed as "daily.csv"
+  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  hourlyQ = qTab$Q
+
+  split = strsplit(as.vector(qTab$date), ' ')
+  allDates = rep(NA, nrow(qTab))
+  for (j in 1:length(split)){
+    allDates[j] = split[[j]][1]
+  }
+
+  # average daily Q:
+  dates = unique(allDates)
+  q = rep(NA, length(dates))
+  for(j in 1:length(q)){
+    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+  }
+  q = as.numeric(q)
+  fieldQ = q[match(fieldDates[i,], dates)]
+  fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
+  fieldQmean = mean(fieldQrange)
+
+  cdf = ecdf(q)
+  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfMean = mean(cdfRange)
+
+  oTab$QRecLength_yrs[i] =  round(length(q)/365)
+  oTab$Q_cms[i] = paste0(round(fieldQmean, 3), '±', round(fieldQmean-fieldQrange[1], 3))
+  oTab$Q_percentile[i] = paste0(round(cdfMean, 3), '±', round(cdfMean-cdfRange[1], 3))
+  oTab$runoff_mmPerDay[i] =  paste0(round(1e-3*60*60*25*fieldQmean/oTab$gauge_A_km2[i], 3),
+                                    '±', round(1e-3*60*60*25*(fieldQmean-fieldQrange[1])/oTab$gauge_A_km2[i], 3))# basin-averaged runoff
+
+  return(oTab)
 
 }

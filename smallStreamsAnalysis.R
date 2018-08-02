@@ -19,15 +19,12 @@ require(here) # for easy relative path management.
 #############################################################################################
 # Define input parameters:
 
-# contains pointers to run:
-
-# workingDir = '/home/eric/Dropbox/programs/git_repos/streamWidthAnalysis2017'
-
 # data table file names:
 
 data_folders = c('locationStreamSurveys', 'repeatStreamSurveys', 'streamWidthModelOutput')
 
-locNames = c('kings', 'sagehen', 'elder', 'caribou', 'v40', 'blueduck', 'stony') # these were not the same as the data files in the repo.
+locNames = c('kings', 'sagehen', 'elder', 'caribou', 'v40', 'blueduck', 'stony')
+# these ^ were not the same as the data files in the repo. As continue working, fix these.
 repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
@@ -50,12 +47,12 @@ if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' 
 #############################################################################################
 # Figure Scripts:
 
-# Figure 1 - stream width map generator:
-source(here('fig1_widthMap.R'))
-pdfOut = here('figures', 'widthMap.pdf')
-fig1_widthMap(inTabPaths, tabNames, pdfOut) # we have a memory issue with this one. It crashed R for me...
-
-# This one ^ refers to GIS data that isn't provided in the repo...
+# # Figure 1 - stream width map generator:
+# source(here('fig1_widthMap.R'))
+# pdfOut = here('figures', 'widthMap.pdf')
+# fig1_widthMap(inTabPaths, tabNames, pdfOut)
+# # we have a memory issue with this one. It crashed R for me...
+# # This one ^ refers to GIS data that isn't provided in the repo...
 
 # Figure 2 - stream width distributions:
 # this one put functions last. they should be first, or put somewhere else. Otherwise the function doesn't know what they are and it throws an error.
@@ -69,7 +66,7 @@ fig2_distributions(inTabPaths, tabNames, pdfOut)
 # it also puts functions last. They can be last if they're outside the function call...
 source(here('fig3_widthModel.R'))
 pdfOut = here('figures', 'fig3_widthModel4_3.pdf')
-csvOut = here('tables', 'modeledWidthTab4_3.csv')
+csvOut = here('tables', 'modeledWidthTab4_3')
 fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 
 # Figure 4 was produced in Adobe Illustrator
@@ -79,10 +76,12 @@ fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 
 # ED Figure 1 was produced in Adobe Illustrator
 
-# ED table 1 and table 2 - catchment attributes:
-source(here('EDtab1_EDtab2_catchment_attributes.R'))
-csvOut = here('tables', 'EDtable1.csv')
-EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
+
+# # this one needs discharge and shapefile records?
+# # ED table 1 and table 2 - catchment attributes:
+# source(here('EDtab1_EDtab2_catchment_attributes.R'))
+# csvOut = here('tables', 'EDtable1.csv')
+# EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
 source(here('EDfig2_EDtab3_GOF.R'))
@@ -91,7 +90,8 @@ pdfOut = here('figures', 'EDfig2_GOF.pdf')
 csvOut = here('tables', 'EDtable3_GOF.csv')
 EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
 
-# ED table 4 - efflux calculation:
-source(here('EDtable3.R'))
-csvOut = here('tables', 'EDtable3.csv')
-EDtable4(inTabPaths, tabNames, csvOut, workingDir)
+# is there a script for this?
+# # ED table 4 - efflux calculation:
+# source(here('EDtable3.R'))
+# csvOut = here('tables', 'EDtable3.csv')
+# EDtable4(inTabPaths, tabNames, csvOut, workingDir)
