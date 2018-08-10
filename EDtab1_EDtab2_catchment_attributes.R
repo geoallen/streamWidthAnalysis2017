@@ -18,19 +18,26 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
                      c("7/12/2015","7/13/2015","7/14/2015"),
                      c("09/27/2015","",""),
                      # repeat surveys:
-                     c("2015-10-27","",""),
-                     c("2015-12-09","",""),
-                     c("2016-02-02","",""),
-                     c("2016-02-14","",""),
-                     c("2016-03-04","",""),
-                     c("2016-03-04","",""))
+                     c("10/27/2015","",""),
+                     c("12/9/2015","",""),
+                     c("2/2/2016","",""),
+                     c("2/14/2016","",""),
+                     c("3/4/2016","",""),
+                     c("3/4/2016","",""))
 
   # gauge upstream basin area:
   gauge_A_km2 = c(10.59, 27.2, 16.8, 104, 6350, 64, 1.3, rep(0.48, 6))
 
   # get paths of discharge records:
   qTabPaths = paste0(sapply(strsplit(inTabPaths,'/field/'), '[[' ,1),
-                     '/discharge_records/daily')
+                     '/discharge_records/')
+
+  ord_path = paste0(sapply(strsplit(inTabPaths,'/field/'), '[[' ,1),
+                     '/field/stony_creek_strm_order.csv')
+  ord_path[1:7] = NA
+
+  ord_cols = c('ord01', 'ord05', 'ord07', 'ord08', 'ord11', 'ord12')
+
   # type of gauge record:
   gaugeType = c('USGS', 'USGS', 'USGS', 'CPCRW', 'NZhourly', 'NZdaily', 'stony',
                 rep('stony_sub', 6))
@@ -112,7 +119,7 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
     w_raw = tab$flowing_width*(1-tab$percent_nonflow/100)
     w_raw[grep('RF', tab$code)] = w_raw[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
     notZero = w_raw!=0
-    w = w_raw[notZero]
+    w = w_raw[notZero & !is.na(w_raw)]
     w = w * 2.54 # inches to cm convert
 
     N = length(w)
@@ -142,18 +149,35 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
 
     # find mode of data with gaussian density kernel:
     # charactarize distribution with a density kernel:
-    kern = density(w, bw=bw, kernel=kernel, na.rm=T)
+    kern = density(w, bw=bw, kernel=kernel, na.rm = TRUE)
     kernMode = kern$x[which.max(kern$y)]
 
+    # if stony_sub, add stream order column
+
+    if (i >= 8) {
+      ords = data.frame(read.csv(ord_path[i]))[c('segment', ord_cols[i-7])]
+
+      tab$stream_order = rep(NA, nrow(tab))
+
+      for(j in 1:nrow(tab)) {
+        seg = strsplit(paste(tab$flag_id[j]), '_')[[1]][1]
+        if (seg %in% ords$segment) {
+          ind = match(seg, ords$segment)
+          tab$stream_order[j] = ords[ind,2]
+        }
+      }
+    } else {
+
+    }
 
     # find first order mean stream width:
     fOw_raw = w_raw[tab$stream_order == 1]
     notZero = (fOw_raw!=0 & !is.na(fOw_raw))
     fOw = fOw_raw[notZero]*2.54# inches to cm convert
     fOw_all = c(fOw_all, fOw)
-    mFoW = mean(fOw, na.rm=T)
-    medFoW = median(fOw, na.rm=T)
-    modeFoW = density(fOw, bw=bw, kernel=kernel, na.rm=T)
+    mFoW = mean(fOw, na.rm = TRUE)
+    medFoW = median(fOw, na.rm = TRUE)
+    modeFoW = density(fOw, bw=bw, kernel=kernel, na.rm = TRUE)
     kernModeFoW = modeFoW$x[which.max(modeFoW$y)]
 
     oTab$N_Width_Obs[i] = N
@@ -166,7 +190,11 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
     oTab$mean1OrdStrWidth_cm[i] = round(mFoW, 3)
     oTab$med1OrdStrWidth_cm[i] = round(medFoW, 3)
     oTab$mode1OrdStrWidth_cm[i] = round(kernModeFoW, 3)
-    oTab$ADN_relief[i] = round(diff(range(tab$elev_m, na.rm=T)))
+    if (!is.null(tab$elev_m)) {
+      oTab$ADN_relief[i] = round(diff(range(tab$elev_m, na.rm = TRUE)))
+    } else {
+      oTab$ADN_relief[i] = NA
+    }
   }
 
   print(paste0("mean first order width: ", round(mean(fOw_all),1),'±', round(sd(fOw_all),1)))
@@ -174,18 +202,18 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
                ' +', quantile(fOw_all)[[2]],
                ' -', quantile(fOw_all)[[4]]))
 
-  modeFoW = density(fOw_all, bw=bw, kernel=kernel, na.rm=T)
+  modeFoW = density(fOw_all, bw=bw, kernel=kernel, na.rm = TRUE)
   kernModeFoW = modeFoW$x[which.max(modeFoW$y)]
   print(paste0("mode first order width: ", round(kernModeFoW,1), " cm"))
 
-  print(mean(oTab$ADN_relief))
+  print(mean(oTab$ADN_relief, na.rm = TRUE))
   oTab = as.data.frame(t(oTab))
   colnames(oTab) = tabNames
   oTab = oTab[-1,]
 
   write.csv(oTab, csvOut)
-  cmd = paste('open', csvOut)
-  system(cmd)
+  # cmd = paste('open', csvOut)
+  # system(cmd)
 
 }
 
@@ -199,15 +227,15 @@ r2 <- function(Oi, Ei){ 1-(sum((Oi-Ei)^2))/(sum((Oi-mean(Oi))^2)) }
 # analyze gauge data:
 USGSgauge <- function(qTabPaths, fieldDates, oTab, i){
   # analyze USGS gauge records:
-  qTab = read.table(paste0(qTabPaths[i], '.txt'), sep="\t", fill=T, skip=14, header=T)[-1,]
+  qTab = read.table(paste0(qTabPaths[i], 'daily.txt'), sep="\t", fill=T, skip=14, header=T)[-1,]
   q = as.numeric(as.vector(qTab[, 4]))*0.0283 # cfs to cms convert
 
   fieldQ = q[match(fieldDates[i,], qTab$datetime)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)
@@ -223,22 +251,22 @@ CPCRW <- function(qTabPaths, fieldDates, oTab, i){
   # analyze caribou-poker creek gauge data (data from Jay Jones):
   # converted original xls file to csv in excel and renamed as "daily.csv"
   # caribou 15 min interval records:
-  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  qTab = read.csv(paste0(qTabPaths[i], 'daily.csv'), header=T)
   hourlyQ = qTab$AvgOfDischarge.L.s.*0.001 # L/s to cms convert
 
   # convert hourly Q to average daily Q:
   dates = as.vector(unique(qTab$Date.and.Time))
   q = dates
   for(j in 1:length(dates)){
-    q[j] = mean(hourlyQ[dates[j] == qTab$Date.and.Time], na.rm=T)
+    q[j] = mean(hourlyQ[dates[j] == qTab$Date.and.Time], na.rm = TRUE)
   }
   q = as.numeric(q)
   fieldQ = q[match(fieldDates[i,], dates)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)
@@ -253,7 +281,7 @@ CPCRW <- function(qTabPaths, fieldDates, oTab, i){
 
 NZhourly <- function(qTabPaths, fieldDates, oTab, i){
   # NZ hourly records:
-  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  qTab = read.csv(paste0(qTabPaths[i], 'daily.csv'), header=T)
   hourlyQ = qTab$flow_rate_m3.s
   split = strsplit(as.vector(qTab$date.time), ' ')
   allDates = rep(NA, nrow(qTab))
@@ -264,15 +292,15 @@ NZhourly <- function(qTabPaths, fieldDates, oTab, i){
   dates = unique(allDates)
   q = dates
   for(j in 1:length(dates)){
-    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm = TRUE)
   }
 
   fieldQ = q[match(fieldDates[i,], dates)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)
@@ -287,14 +315,14 @@ NZhourly <- function(qTabPaths, fieldDates, oTab, i){
 
 NZdaily <- function(qTabPaths, fieldDates, oTab, i){
   # analyze NZ daily records:
-  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T, skip=4)
+  qTab = read.csv(paste0(qTabPaths[i], 'daily.csv'), header=T, skip=4)
   q = as.numeric(as.vector(qTab$Discharge..m3.s.))
   fieldQ = q[match(fieldDates[i,], qTab$Date)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)
@@ -310,7 +338,7 @@ NZdaily <- function(qTabPaths, fieldDates, oTab, i){
 
 stony <- function(qTabPaths, fieldDates, oTab, i){
   # converted original xls file to csv in excel and renamed as "daily.csv"
-  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
+  qTab = read.csv(paste0(qTabPaths[i], 'daily.csv'), header=T)
   hourlyQ = qTab$Q..L.s..conversion.using.rating.curve.
 
   split = strsplit(as.vector(qTab$Timestamp), ' ')
@@ -323,15 +351,15 @@ stony <- function(qTabPaths, fieldDates, oTab, i){
   dates = unique(allDates)
   q = rep(NA, length(dates))
   for(j in 1:length(q)){
-    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm = TRUE)
   }
   q = as.numeric(q)
   fieldQ = q[match(fieldDates[i,], dates)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)*1e-3 # L/s to cms
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)
@@ -347,10 +375,10 @@ stony <- function(qTabPaths, fieldDates, oTab, i){
 
 stony_sub <- function(qTabPaths, fieldDates, oTab, i){
   # converted original xls file to csv in excel and renamed as "daily.csv"
-  qTab = read.csv(paste0(qTabPaths[i], '.csv'), header=T)
-  hourlyQ = qTab$Q
+  qTab = read.csv(paste0(qTabPaths[i], 'discharge_data.csv'), header=T)
+  hourlyQ = qTab[4]
 
-  split = strsplit(as.vector(qTab$date), ' ')
+  split = strsplit(as.vector(qTab$datetime), ' ')
   allDates = rep(NA, nrow(qTab))
   for (j in 1:length(split)){
     allDates[j] = split[[j]][1]
@@ -360,15 +388,15 @@ stony_sub <- function(qTabPaths, fieldDates, oTab, i){
   dates = unique(allDates)
   q = rep(NA, length(dates))
   for(j in 1:length(q)){
-    q[j] = mean(hourlyQ[dates[j] == allDates], na.rm=T)
+    q[j] = mean(which(dates[j] == allDates), na.rm = TRUE)
   }
   q = as.numeric(q)
   fieldQ = q[match(fieldDates[i,], dates)]
-  fieldQrange = range(as.numeric(fieldQ), na.rm=T)*1e-3 # L/s to cms
+  fieldQrange = range(as.numeric(fieldQ), na.rm = TRUE)*1e-3 # L/s to cms
   fieldQmean = mean(fieldQrange)
 
   cdf = ecdf(q)
-  cdfRange = range(100*cdf(fieldQ), na.rm=T)
+  cdfRange = range(100*cdf(fieldQ), na.rm = TRUE)
   cdfMean = mean(cdfRange)
 
   oTab$QRecLength_yrs[i] =  round(length(q)/365)

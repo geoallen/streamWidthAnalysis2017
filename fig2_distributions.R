@@ -180,7 +180,7 @@ tabReader = function(filePath){
   w_raw = tab$flowing_width*(1-tab$percent_nonflow/100)
   w_raw[grep('RF', tab$code)] = w_raw[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
   notZero = w_raw!=0
-  w = w_raw[notZero]
+  w = w_raw[notZero & !is.na(w_raw)]
   w = w * 2.54 # inches to cm convert
   return(w)
 }

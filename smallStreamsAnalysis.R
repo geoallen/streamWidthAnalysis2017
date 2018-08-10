@@ -23,19 +23,22 @@ require(here) # for easy relative path management.
 
 data_folders = c('locationStreamSurveys', 'repeatStreamSurveys', 'streamWidthModelOutput')
 
-locNames = c('kings', 'sagehen', 'elder', 'caribou', 'v40', 'blueduck', 'stony')
+dataNames = c('konza', 'sagehen', 'angelo', 'caribou', 'v40', 'blueduck', 'stony',
+            'stony_subcatchment_20151027', 'stony_subcatchment_20151209',
+            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
+            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
 # these ^ were not the same as the data files in the repo. As continue working, fix these.
-repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
-           'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
-           'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
-loc_paths = here('locationStreamSurveys', paste0(locNames, '.csv'))
-rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
-inTabPaths = c(loc_paths, rep_paths)
+# repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
+#            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
+#            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
+inTabPaths = here('data', dataNames, 'field',  paste0(dataNames, '_field_dat.csv'))
+# rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
+# inTabPaths = c(loc_paths, rep_paths)
 # inQRecordPaths = here('', fNames, 'discharge_records/') # is this essential? I can't immediately see where it gets used but these data are not in the repo.
 if (F %in% file.exists(inTabPaths)){message("Field Data CSV files are missing")}
 
 # figure labels:
-tabNames = c('Kings', 'Sagehen', 'Elder', "Caribou", "V40", "Blue Duck", "Stony",
+tabNames = c('Konza', 'Sagehen', 'Angelo', "Caribou", "V40", "Blue Duck", "Stony",
              "2015-10-27", "2015-12-09", "2016-02-02",
              "2016-02-14", "2016-03-04a", "2016-03-04b")
 
@@ -68,6 +71,7 @@ source(here('fig3_widthModel.R'))
 pdfOut = here('figures', 'fig3_widthModel4_3.pdf')
 csvOut = here('tables', 'modeledWidthTab4_3')
 fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
+# ^ this one seems to be missing a panel in the bottom left...?
 
 # Figure 4 was produced in Adobe Illustrator
 
@@ -77,11 +81,11 @@ fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 # ED Figure 1 was produced in Adobe Illustrator
 
 
-# # this one needs discharge and shapefile records?
-# # ED table 1 and table 2 - catchment attributes:
-# source(here('EDtab1_EDtab2_catchment_attributes.R'))
-# csvOut = here('tables', 'EDtable1.csv')
-# EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
+# this one needs discharge and shapefile records?
+# ED table 1 and table 2 - catchment attributes:
+source(here('EDtab1_EDtab2_catchment_attributes.R'))
+csvOut = here('tables', 'EDtable1.csv')
+EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
 source(here('EDfig2_EDtab3_GOF.R'))

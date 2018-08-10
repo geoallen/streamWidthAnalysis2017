@@ -21,6 +21,14 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
   dlnInt = 0.1
 
 
+
+    ord_path = paste0(sapply(strsplit(inTabPaths,'/field/'), '[[' ,1),
+                       '/field/stony_creek_strm_order.csv')
+    ord_path[1:7] = NA
+
+    ord_cols = c('ord01', 'ord05', 'ord07', 'ord08', 'ord11', 'ord12')
+
+
   #################################################################
   # set up table to store all the fitted distribution and GOF statistics info:
   names = c("N", "N_BIN",
@@ -64,6 +72,24 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
     notZero = w_raw!=0 & !is.na(w_raw)
     w = w_raw[notZero]
     w = w * 2.54 # inches to cm convert
+
+    # if stony_sub, add stream order column
+
+    if (i >= 8) {
+      ords = data.frame(read.csv(ord_path[i]))[c('segment', ord_cols[i-7])]
+
+      tab$stream_order = rep(NA, nrow(tab))
+
+      for(j in 1:nrow(tab)) {
+        seg = strsplit(paste(tab$flag_id[j]), '_')[[1]][1]
+        if (seg %in% ords$segment) {
+          ind = match(seg, ords$segment)
+          tab$stream_order[j] = ords[ind,2]
+        }
+      }
+    } else {
+
+    }
 
     # calculate mode first order stream width for Pareto fit:
     # find first order mean stream width:

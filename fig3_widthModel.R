@@ -22,17 +22,16 @@ fig3_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
   if (!"MASS" %in% rownames(installed.packages())) {install.packages("MASS")}; require(MASS)
   if (!"shapefiles" %in% rownames(installed.packages())) {install.packages("shapefiles")}; require(shapefiles)
 
-  trampushCSVpath = here('auxiliary_data', 'Trampush_etal_2014_WRR_sup_Bankful_W_Q.csv')
+  trampushCSVpath = here('data', 'Trampush_etal_2014_WRR_sup_Bankful_W_Q.csv')
 
-  fieldtopoPaths = c(
-    here('locationStreamSurveys','kings.csv'),
-    here('locationStreamSurveys','sagehen.csv'),
-    here('locationStreamSurveys','elder.csv'),
-    here('locationStreamSurveys','caribou.csv'),
-    here('locationStreamSurveys','blueduck.csv'),
-    here('locationStreamSurveys','stony.csv')
-  )
-
+  dataNames = c('konza', 'sagehen', 'angelo', 'caribou', 'blueduck', 'stony')
+  # these ^ were not the same as the data files in the repo. As continue working, fix these.
+  # repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
+  #            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
+  #            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
+  fieldtopoPaths = here('data', 'fieldAndTopoData',  paste0(dataNames, '_field_dat.csv'))
+  # rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
+  # inTabPaths = c(loc_paths, rep_paths)
 
   ##############################################
 
@@ -95,7 +94,7 @@ fig3_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
   # for each basin, model widths and compare to observations:
   for (i in c(1,2,3,5,6)){
 
-    print(paste0(i, '... ', tabNames[i]))
+    print(paste0(i, '... ', dataNames[i]))
     # read in data table:
     tab = tableReader(fieldtopoPath = fieldtopoPaths[i])
 
@@ -109,9 +108,9 @@ fig3_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
     # stream width model (equation 3):
     wMod_raw = widthModel(
                       a = exp(trampush$model$coefficients[[1]]),
-                      A = tab$acc_area_m2, # m2
+                      A = tab$acc_m2, # m2
                       b = trampush$model$coefficients[[2]],
-                      Q = runoff_m[i]*tab$acc_area_m2, # m3/s,
+                      Q = runoff_m[i]*tab$acc_m2, # m3/s,
                       g = 9.8, # m/s2
                       S = abs(tab$slope),
                       k = k, # m; roughness length scale from Parker (1991)
@@ -145,13 +144,13 @@ fig3_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
     # Pearson's Chi-squared test for count data:
     chi = chisq.test(tab$flowing_width[finiteWidths], modeledWidths) # low p-value signifies a good fit
-    print(paste(i, tabNames[i],
+    print(paste(i, dataNames[i],
                 "    X2:", round(chi$statistic[[1]], 4),
                 "    p:", round(chi$p.value[[1]], 4)))
 
     # Kolmogorov-Smirnov test bewteen raw model and observed data:
     ks = ks.test(tab$flowing_width, modeledWidths)
-    print(paste(i, tabNames[i],
+    print(paste(i, dataNames[i],
                 "    ks D:", round(ks$statistic[[1]], 4),
                 "    ks p:", round(ks$p.value[[1]], 4)))
     options(warn=0)
@@ -265,7 +264,7 @@ trampush_WidthAreaRegression <- function(trampushCSVpath, plot=FALSE){
 tableReader <- function(fieldtopoPath){
 
   # read in and process input table.
-  tab = read.csv(fieldtopoPath, header=T, skip = 49)
+  tab = read.csv(fieldtopoPath, header=T)
   tab$percent_nonflow[is.na(tab$percent_nonflow)] = 0
   w = tab$flowing_width*(1-tab$percent_nonflow/100)
   w[grep('RF', tab$code)] = w[grep('RF', tab$code)]*39.3701 # Rangefinder Convert
