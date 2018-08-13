@@ -1,4 +1,4 @@
-fig2_distributions <- function(inTabPaths, tabNames, pdfOut){
+fig3_distributions <- function(inTabPaths, tabNames, pdfOut){
 
   ############################
   # fig2_distributions.R

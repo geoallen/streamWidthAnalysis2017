@@ -1,4 +1,4 @@
-fig3_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
+fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
   # widthModel.R
   # George Allen, June 27, 2017
