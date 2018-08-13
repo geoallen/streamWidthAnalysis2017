@@ -1,4 +1,4 @@
-fig1_widthMap <- function(inTabPaths, tabNames, pdfOut){
+fig1_2_widthMap <- function(inTabPaths, tabNames, pdfOut){
 
   # widthMap.R
   # by George Allen, Feb 2016
