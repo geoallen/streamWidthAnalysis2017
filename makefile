@@ -20,7 +20,7 @@ figures/EDfig2_GOF.pdf:  EDfig2_EDtab3_GOF.r
 	./smallStreamsAnalysis.r --EDtab3_fig2
 
 clean:
-	rm -rf figures/
-	rm -rf tables/
+	rm -rf figures/*
+	rm -rf tables/*
 
 .PHONY: all clean

@@ -3,8 +3,10 @@ locationStreamSurveys/
 repeatStreamSurveys/
 streamWidthModelOutput/
 auxiliary_data/
-tables/
-figures/
+tables/*
+!tables/.gitkeep
+figures/*
+!figures/.gitkeep
 data/
 
 # History files
