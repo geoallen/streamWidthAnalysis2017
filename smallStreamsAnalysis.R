@@ -27,14 +27,9 @@ dataNames = c('konza', 'sagehen', 'angelo', 'caribou', 'v40', 'blueduck', 'stony
             'stony_subcatchment_20151027', 'stony_subcatchment_20151209',
             'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
             'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
-# these ^ were not the same as the data files in the repo. As continue working, fix these.
-# repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
-#            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
-#            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
+
 inTabPaths = here('data', dataNames, 'field',  paste0(dataNames, '_field_dat.csv'))
-# rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
-# inTabPaths = c(loc_paths, rep_paths)
-# inQRecordPaths = here('', fNames, 'discharge_records/') # is this essential? I can't immediately see where it gets used but these data are not in the repo.
+
 if (F %in% file.exists(inTabPaths)){message("Field Data CSV files are missing")}
 
 # figure labels:
@@ -50,38 +45,31 @@ if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' 
 #############################################################################################
 # Figure Scripts:
 
-# # Figure 1 - stream width map generator:
-# source(here('fig1_widthMap.R'))
-# pdfOut = here('figures', 'widthMap.pdf')
-# fig1_widthMap(inTabPaths, tabNames, pdfOut)
-# # we have a memory issue with this one. It crashed R for me...
-# # This one ^ refers to GIS data that isn't provided in the repo...
+# Figures 1 and 2- stream width map generator:
+# Makes a preliminary draft figure, which was later annotated manually in Adobe Illustrator and ArcGIS.
+# Figure 2 is comprised of the bottom half of the draft figure.
+source(here('fig1_2_widthMap.R'))
+pdfOut = here('figures', 'fig1_2_widthMap_draft.pdf')
+fig1_widthMap(inTabPaths, tabNames, pdfOut)
 
-# Figure 2 - stream width distributions:
-# this one put functions last. they should be first, or put somewhere else. Otherwise the function doesn't know what they are and it throws an error.
-# Was this working on your machine?
-source(here('fig2_distributions.R'))
-pdfOut = here('figures', 'fig2_distributions.pdf')
-fig2_distributions(inTabPaths, tabNames, pdfOut)
+# Figure 3 - stream width distributions:
+source(here('fig3_distributions.R'))
+pdfOut = here('figures', 'fig3_distributions.pdf')
+fig3_distributions(inTabPaths, tabNames, pdfOut)
 
-# Figure 3 - modeled stream widths:
-# this one has hardwired paths to some result.
-# it also puts functions last. They can be last if they're outside the function call...
-source(here('fig3_widthModel.R'))
-pdfOut = here('figures', 'fig3_widthModel4_3.pdf')
+# Figure 4 - modeled stream widths:
+source(here('fig4_widthModel.R'))
+pdfOut = here('figures', 'fig4_widthModel4_3.pdf')
 csvOut = here('tables', 'modeledWidthTab4_3')
-fig3_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
-# ^ this one seems to be missing a panel in the bottom left...?
+fig4_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 
-# Figure 4 was produced in Adobe Illustrator
+# Figure 5 was produced in Adobe Illustrator
 
 #############################################################################################
 # Extended Data Figures and Tables:
 
 # ED Figure 1 was produced in Adobe Illustrator
 
-
-# this one needs discharge and shapefile records?
 # ED table 1 and table 2 - catchment attributes:
 source(here('EDtab1_EDtab2_catchment_attributes.R'))
 csvOut = here('tables', 'EDtable1.csv')

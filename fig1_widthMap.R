@@ -253,8 +253,8 @@ fig1_widthMap <- function(inTabPaths, tabNames, pdfOut){
   }
 
   dev.off()
-  cmd = paste('open', pdfOut)
-  system(cmd)
+  # cmd = paste('open', pdfOut)
+  # system(cmd)
 
 }
 
