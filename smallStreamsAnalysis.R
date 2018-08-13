@@ -13,10 +13,55 @@
 # fieldwork_analysis.R
 # George Allen, Oct 2017
 
+########################################################
+# install and load  necessary libraries
+
+packages = c('here', 'devtools')
+
+ipak = function(pkg){
+  new_pkg = pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new_pkg)) {
+    install.packages(new_pkg, dependencies = TRUE)
+  }
+}
+
+gitPackages = c('docopt')
+
+gitPackagePaths = c('docopt/docopt.R')
+
+gitPak = function(pkg, path) {
+  require(devtools)
+  new_pkg = pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new_pkg)) {
+    install_github(path, dependencies = TRUE)
+  }
+}
+
+ipak(packages)
+gitPak(gitPackages, gitPackagePaths)
+
 #############################################################################################
 # Load required packages
 
 require(here) # for easy relative path management.
+require(docopt) # for passing arguments from command line.
+
+# command line usage information
+
+'
+usage:  smallStreamsAnalysis.r [options]
+
+options:
+  --fig1_2       Generate figures 1 and 2.
+  --fig3         Generate figure 3.
+  --fig4         Generate figure 4 and table 1.
+  --EDtab1_2     Generate supplementary tables 1 and 2.
+  --EDtab3_fig2  Generate supplementary table 3 and figure 2.
+  --EDtab4       Generate supplementary table 4.
+  --help         Usage.
+' -> doc
+
+opts = docopt(doc)
 
 #############################################################################################
 # Define input parameters:
@@ -50,20 +95,26 @@ if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' 
 # Figures 1 and 2- stream width map generator:
 # Makes a preliminary draft figure, which was later annotated manually in Adobe Illustrator and ArcGIS.
 # Figure 2 is comprised of the bottom half of the draft figure.
-source(here('fig1_2_widthMap.R'))
-pdfOut = here('figures', 'fig1_2_widthMap_draft.pdf')
-fig1_widthMap(inTabPaths, tabNames, pdfOut)
+if (opts$fig1_2 | all(!unlist(opts))) {
+  source(here('fig1_2_widthMap.R'))
+  pdfOut = here('figures', 'fig1_2_widthMap_draft.pdf')
+  fig1_2_widthMap(inTabPaths, tabNames, pdfOut)
+}
 
 # Figure 3 - stream width distributions:
-source(here('fig3_distributions.R'))
-pdfOut = here('figures', 'fig3_distributions.pdf')
-fig3_distributions(inTabPaths, tabNames, pdfOut)
+if (opts$fig3 | all(!unlist(opts))) {
+  source(here('fig3_distributions.R'))
+  pdfOut = here('figures', 'fig3_distributions.pdf')
+  fig3_distributions(inTabPaths, tabNames, pdfOut)
+}
 
 # Figure 4 - modeled stream widths:
-source(here('fig4_widthModel.R'))
-pdfOut = here('figures', 'fig4_widthModel4_3.pdf')
-csvOut = here('tables', 'modeledWidthTab4_3')
-fig4_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
+if (opts$fig4 | all(!unlist(opts))) {
+  source(here('fig4_widthModel.R'))
+  pdfOut = here('figures', 'fig4_widthModel4_3.pdf')
+  csvOut = here('tables', 'modeledWidthTab4_3')
+  fig4_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
+}
 
 # Figure 5 was produced in Adobe Illustrator
 
@@ -73,17 +124,20 @@ fig4_widthModel(inTabPaths, tabNames, csvOut, pdfOut)
 # ED Figure 1 was produced in Adobe Illustrator
 
 # ED table 1 and table 2 - catchment attributes:
-source(here('EDtab1_EDtab2_catchment_attributes.R'))
-csvOut = here('tables', 'EDtable1.csv')
-EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
+if (opts$EDtab1_2 | all(!unlist(opts))) {
+  source(here('EDtab1_EDtab2_catchment_attributes.R'))
+  csvOut = here('tables', 'EDtable1.csv')
+  EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
+}
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
-source(here('EDfig2_EDtab3_GOF.R'))
-modTabDir = here('tables')
-pdfOut = here('figures', 'EDfig2_GOF.pdf')
-csvOut = here('tables', 'EDtable3_GOF.csv')
-EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
-
+if (opts$EDtab3_fig2 | all(!unlist(opts))) {
+  source(here('EDfig2_EDtab3_GOF.R'))
+  modTabDir = here('tables')
+  pdfOut = here('figures', 'EDfig2_GOF.pdf')
+  csvOut = here('tables', 'EDtable3_GOF.csv')
+  EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
+}
 # is there a script for this?
 # # ED table 4 - efflux calculation:
 # source(here('EDtable3.R'))
