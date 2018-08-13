@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 # allen-headwater-stream-widths-distributions-study
 
 # contains R code used to analyze the data presented in Allen et al., "Similarity of stream width distributions in headwater catchments"
