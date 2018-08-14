@@ -277,8 +277,8 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
 
   # display PDF:
   dev.off()
-  cmd = paste('open', pdfOut)
-  system(cmd)
+  # cmd = paste('open', pdfOut)
+  # system(cmd)
 
   # return stat Tab:
   oTab = as.data.frame(t(statTab))
@@ -286,8 +286,8 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
   colnames(oTab) = tabNames
 
   write.csv(oTab, csvOut)
-  cmd = paste('open', csvOut)
-  system(cmd)
+  # cmd = paste('open', csvOut)
+  # system(cmd)
 
 }
 
