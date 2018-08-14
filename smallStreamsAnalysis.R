@@ -16,12 +16,12 @@
 ########################################################
 # install and load  necessary libraries
 
-packages = c('here', 'devtools')
+packages = c('here', 'devtools', 'foreign', 'MASS', 'shapefiles')
 
 ipak = function(pkg){
   new_pkg = pkg[!(pkg %in% installed.packages()[, "Package"])]
   if (length(new_pkg)) {
-    install.packages(new_pkg, dependencies = TRUE)
+    install.packages(new_pkg, dependencies = TRUE, repos = 'http://cran.us.r-project.org')
   }
 }
 
@@ -96,6 +96,7 @@ if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' 
 # Makes a preliminary draft figure, which was later annotated manually in Adobe Illustrator and ArcGIS.
 # Figure 2 is comprised of the bottom half of the draft figure.
 if (opts$fig1_2 | all(!unlist(opts))) {
+  message('compiling figures 1 and 2...')
   source(here('fig1_2_widthMap.R'))
   pdfOut = here('figures', 'fig1_2_widthMap_draft.pdf')
   fig1_2_widthMap(inTabPaths, tabNames, pdfOut)
@@ -103,6 +104,7 @@ if (opts$fig1_2 | all(!unlist(opts))) {
 
 # Figure 3 - stream width distributions:
 if (opts$fig3 | all(!unlist(opts))) {
+  message('compiling figure 3...')
   source(here('fig3_distributions.R'))
   pdfOut = here('figures', 'fig3_distributions.pdf')
   fig3_distributions(inTabPaths, tabNames, pdfOut)
@@ -110,6 +112,7 @@ if (opts$fig3 | all(!unlist(opts))) {
 
 # Figure 4 - modeled stream widths:
 if (opts$fig4 | all(!unlist(opts))) {
+  message('compiling figure 4 and table 1...')
   source(here('fig4_widthModel.R'))
   pdfOut = here('figures', 'fig4_widthModel4_3.pdf')
   csvOut = here('tables', 'modeledWidthTab4_3')
@@ -125,6 +128,7 @@ if (opts$fig4 | all(!unlist(opts))) {
 
 # ED table 1 and table 2 - catchment attributes:
 if (opts$EDtab1_2 | all(!unlist(opts))) {
+  message('compiling supplementary tables 1 and 2...')
   source(here('EDtab1_EDtab2_catchment_attributes.R'))
   csvOut = here('tables', 'EDtable1.csv')
   EDtab1_EDtab2_catchment_attributes(inTabPaths, tabNames, csvOut, workingDir)
@@ -132,6 +136,7 @@ if (opts$EDtab1_2 | all(!unlist(opts))) {
 
 # ED Figure 2 and ED Table 3 - quantify GOF for distributions:
 if (opts$EDtab3_fig2 | all(!unlist(opts))) {
+  message('compiling supplementary table 3 and supplementary figure 2...')
   source(here('EDfig2_EDtab3_GOF.R'))
   modTabDir = here('tables')
   pdfOut = here('figures', 'EDfig2_GOF.pdf')

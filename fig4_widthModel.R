@@ -18,9 +18,10 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
   ############################################
   # automatically install and load libraries:
-  if (!"foreign" %in% rownames(installed.packages())) {install.packages("foreign")}; require(foreign)
-  if (!"MASS" %in% rownames(installed.packages())) {install.packages("MASS")}; require(MASS)
-  if (!"shapefiles" %in% rownames(installed.packages())) {install.packages("shapefiles")}; require(shapefiles)
+  
+  require(foreign)
+  require(MASS)
+  require(shapefiles)
 
   trampushCSVpath = here('data', 'Trampush_etal_2014_WRR_sup_Bankful_W_Q.csv')
 
