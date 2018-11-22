@@ -1,5 +1,5 @@
-# EDtable1_2_catchment_attributes.R
 # George Allen, Sept 2015
+# Modified: Eric Barefoot, Nov 2018
 
 # For each stream network, adds gauge and topographic
 # information to table 2:
@@ -212,8 +212,6 @@ EDtab1_EDtab2_catchment_attributes <- function(inTabPaths, tabNames, csvOut, wor
   oTab = oTab[-1,]
 
   write.csv(oTab, csvOut)
-  # cmd = paste('open', csvOut)
-  # system(cmd)
 
 }
 

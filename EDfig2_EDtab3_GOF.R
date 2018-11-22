@@ -2,8 +2,9 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
 
   options(warn=-1)
 
-  # ED_fig2_tab3_GOF.R
   # George Allen, Feb 2016
+  # Modified: Eric Barefoot, Nov 2018
+
   print(paste("Generating ED Fig. 2 - GOF of sample distributions"))
 
   #################################################################
@@ -53,10 +54,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
 
 
   op = par(oma = c(2,5,2,2), mar = c(2,2,2,2))
-
-  #pdf(pdfOut, height=8, width=7.2)
-  #op = par(oma = c(2,4,0,0), mar = c(2,1,0,0))
-
 
   #################################################################
   # for each stream survey:
@@ -160,7 +157,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
     # pareto
     parks = pareto.test(jw[jw>minW], minW, 2e2) #modeW
 
-
     #################################################################
     # Quantify differences between surveyed widths to modeled widths (Fig. 3):
     # if a file contained model data exists, read in:
@@ -182,7 +178,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
         modChi$statistic[[1]] = modChi$p.value[[1]] =
         modks$statistic[[1]] = modks$p.value[[1]][[1]] = NA
     }
-
 
     #################################################################
     # add distribution fit and GOF statastics to a table:
@@ -214,16 +209,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
       title(tabNames[i], adj=0, line=1, font=2)
     }
 
-    # add chi square GOF statistics:
-#    text(maxX, maxY-2*maxY/6, paste0("X2=", round(gChi$statistic),
-#                                      ",  p=", round(gChi$p.value, 3)), pos=2, cex=0.75, col=4)
-#    text(maxX, maxY-3*maxY/6, paste0("X2=", round(lnChi$statistic),
-#                                      ",  p=", round(lnChi$p.value, 3)), pos=2, cex=0.75, col=2)
-#    text(maxX, maxY-4*maxY/6, paste0("X2=", round(wChi$statistic),
-#                                      ",  p=", round(wChi$p.value, 3)), pos=2, cex=0.75, col="orange")
-#    text(maxX, maxY-5*maxY/6, paste0("X2=", round(parChi$statistic),
-#                                      ",  p=", round(parChi$p.value, 3)), pos=2, cex=0.75, col=rgb(0.4,0.4,0.4))
-
     # add fitted distributions:
     lines(lineSeq[dpar<maxY&dpar!=0], dpar[dpar<maxY&dpar!=0], col=rgb(.4,.4,.4))
     lines(lineSeq, dw, col="orange")
@@ -253,17 +238,7 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
     axis(1)
     axis(2, las=1)
     options(scipen = -5)
-
-    # add KS GOF test statistics:
-#    text(max(lineSeq), 0.5, paste0("D=", round(gamks$statistic,3),
-#                                   ",  p=", round(gamks$p.value,3)), cex=0.75, pos=2, col=4)
-#    text(max(lineSeq), 0.35, paste0("D=", round(lnks$statistic,3),
-#                                   ",  p=", round(lnks$p.value,3)), cex=0.75, pos=2, col=2)
-#    text(max(lineSeq), 0.2, paste0("D=", round(weibks$statistic,3),
-#                                   ",  p=", round(weibks$p.value,3)), cex=0.75, pos=2, col="orange")
-#    text(max(lineSeq), 0.05, paste0("D=", round(parks$D,3),
-#                                   ",  p=", round(parks$p,3)), cex=0.75, pos=2, col=rgb(0.4,0.4,0.4))
-
+    
     # add fitted distributions:
     options(scipen = 10)
     lines(lineSeq, parCDF(lineSeq), col=rgb(.4,.4,.4), lty=1, lwd=1)
@@ -277,8 +252,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
 
   # display PDF:
   dev.off()
-  # cmd = paste('open', pdfOut)
-  # system(cmd)
 
   # return stat Tab:
   oTab = as.data.frame(t(statTab))
@@ -286,8 +259,6 @@ EDfig2_EDtab3_GOF <- function(inTabPaths, modTabDir, tabNames, pdfOut, csvOut) {
   colnames(oTab) = tabNames
 
   write.csv(oTab, csvOut)
-  # cmd = paste('open', csvOut)
-  # system(cmd)
 
 }
 

@@ -1,8 +1,8 @@
 fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
-  # widthModel.R
   # George Allen, June 27, 2017
   # georgehenryallen@gmail.com
+  # Modified: Eric Barefoot, Nov 2018
 
   # This script generates artifical stream width data for each basin where DEM data are
   # available. It compares the distributins between these modeled stream widths
@@ -18,7 +18,7 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
   ############################################
   # automatically install and load libraries:
-  
+
   require(foreign)
   require(MASS)
   require(shapefiles)
@@ -26,13 +26,8 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
   trampushCSVpath = here('data', 'Trampush_etal_2014_WRR_sup_Bankful_W_Q.csv')
 
   dataNames = c('konza', 'sagehen', 'angelo', 'caribou', 'blueduck', 'stony')
-  # these ^ were not the same as the data files in the repo. As continue working, fix these.
-  # repNames = c('stony_subcatchment_20151027', 'stony_subcatchment_20151209',
-  #            'stony_subcatchment_20160202', 'stony_subcatchment_20160214',
-  #            'stony_subcatchment_20160304a', 'stony_subcatchment_20160304b')
+
   fieldtopoPaths = here('data', 'fieldAndTopoData',  paste0(dataNames, '_field_dat.csv'))
-  # rep_paths = here('repeatStreamSurveys', paste0(repNames, '.csv'))
-  # inTabPaths = c(loc_paths, rep_paths)
 
   ##############################################
 
@@ -61,7 +56,7 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
   #  Data from ED Table #1:
   Q_cms = c(0.303,	0.062, 0.057,	0.137,	418.627,	0.156,	0.019,	0.008,	0.014,	0.015,	0.009,	0.013,	0.013)
-  #c(0.3029814, 0.04445615, 0.08919546, 0.137, 419, 0.155, 0.0075) #m3/s
+
   runoff_m = Q_cms/gauge_A_m2 # m/s; basin-averaged runoff
 
   # set up pdf:
@@ -101,7 +96,6 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
 
     # generate a population of r from a given distribution:
     r = runif(nrow(tab), 1, 10)
-    #r = rnorm(nrow(tab), 5, 2)
 
     # calculate median width-depth ratio from Trampush dataset:
     WDR = median(trampushW2H, na.rm=T)
@@ -156,17 +150,9 @@ fig4_widthModel <- function(fieldtopoPaths, tabNames, csvOut, pdfOut){
                 "    ks p:", round(ks$p.value[[1]], 4)))
     options(warn=0)
 
-    # plot a map of the modeled widths:
-    # Figure 1 - stream width map generator:
-    #source(paste0(wd, '/R/widthMap.R'))
-    #pdfOut = 'E:/misc/2015_09_01_Small_Stream_Width_Fieldwork/misc/mikeLambModel/mapsOfModelWidths/modelMap.pdf'
-    #widthMap(tabOutPath, "konza", pdfOut)
-
   }
 
   dev.off()
-  # cmd = paste('open', pdfOut)
-  # system(cmd)
 
 }
 

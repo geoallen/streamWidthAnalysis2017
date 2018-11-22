@@ -3,6 +3,7 @@ fig3_distributions <- function(inTabPaths, tabNames, pdfOut){
   ############################
   # fig2_distributions.R
   # George Allen, Sept 2016
+  # Modified: Eric Barefoot, Nov 2018
 
   # description: plots figure 2 in allen et al., Nature
 
@@ -160,7 +161,6 @@ fig3_distributions <- function(inTabPaths, tabNames, pdfOut){
   title("i. All surveys", adj=0, line=1, cex=0.8, font=2)
 
   dev.off()
-  # cmd = paste('open', pdfOut); system(cmd) # this is not OS-agnostic
 
   message('Listing fitting parameters for each width distribution...')
   print(fitParams)

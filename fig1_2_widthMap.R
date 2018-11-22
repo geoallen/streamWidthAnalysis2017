@@ -1,7 +1,7 @@
 fig1_2_widthMap <- function(inTabPaths, tabNames, pdfOut){
 
-  # widthMap.R
   # by George Allen, Feb 2016
+  # Modified: Eric Barefoot, Nov 2018
 
   # runs through each stream centerline, calculates the orthogonal
   # direction to the along stream direction at each vertex.
