@@ -8,14 +8,41 @@ Allen et al. (2018) "Similarity of stream width distributions across headwater s
 <b>Installation:</b>
 
 - You will have to have a working `R` installation to use these routines. Download and install `R` according to the instructions on [the R website](https://www.r-project.org/)
-- Download this repository into your working directory.
-- Download raw field and GIS data into the same working directory (DOI: <a href="https://zenodo.org/record/1034385#.WpSVhxPwZE4">10.5281/zenodo.1034384</a>).
+- Either download this repository into your working directory, or clone it from git into the desired directory with:
+```
+git clone https://github.com/geoallen/streamWidthAnalysis2017.git
+```
+- Download raw field and GIS data into the same working directory from zenodo (DOI: <a href="https://zenodo.org/record/1034385#.WpSVhxPwZE4">10.5281/zenodo.1034384</a>).
 - To check and make sure your installation is correct, compare your installation folder with the file tree shown at the bottom of this README.
 
 <b>Usage:</b>
 
+Using your preferred method, users can open up an R session either in RStudio or the terminal, and `source` the top level script. To do this:
+- open R in your preferred way, and set the working directory to the installation folder.
+- run the following:
+```
+source('smallStreamsAnalysis.R')
+```
+
+Optionally, if users want finer grained control, and are comfortable with the command line, the following also works:
+
 - Open a Terminal and `cd` into the directory where you installed the data and scripts.
-- Type `./smallStreamsAnalysis.R` to run the script, reproducing figures and analysis. The directories `/figures` and `/tables` will be created, and contain all the products of the analysis.
+- Enter `./smallStreamsAnalysis.R` on UNIX or just `smallStreamsAnalysis` in the terminal to run the script, reproducing figures and analysis. The directories `/figures` and `/tables` will be created, and contain all the products of the analysis.
+- Users on UNIX systems (MacOS and Linux) who have GNU `make` installed can simply run `make all` to generate all analyses. `make clean` will restore the repository to a pre-run configuration.
+
+The command line interface for these scripts accepts the following options, which can be accessed in the command line with `./smallStreamsAnalysis.R --help`
+
+```
+usage:  smallStreamsAnalysis.r [options]
+
+options:
+  --fig1_2       Generate figures 1 and 2.
+  --fig3         Generate figure 3.
+  --fig4         Generate draft figure 4 and table 1.
+  --EDtab1_2     Generate supplementary tables 1 and 2.
+  --EDtab3_fig2  Generate supplementary table 3 and figure 2.
+  --help         Usage.
+```
 
 <b>Contributing:</b>
 

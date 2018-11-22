@@ -1,20 +1,23 @@
 #!/usr/bin/env Rscript
 
-# allen-headwater-stream-widths-distributions-study
+# contains R code used to analyze the data presented in Allen et al., "Similarity of stream width distributions in headwater catchments" 2018.
 
-# contains R code used to analyze the data presented in Allen et al., "Similarity of stream width distributions in headwater catchments"
+# to run: Terminal option
+# clone the git repository, and download all data and scripts into the same directory per the readme.
+# open a terminal and cd to this directory.
+# run `make` to reproduce figures and analysis if you have GNU make installed
+# or run './smallStreamsAnalysis.r' in UNIX or just 'smallStreamsAnalysis' on Windows to reproduce figures and analysis
 
-# to run:
-# download all data a scripts into the same working directory
-# open top level R script: "smallStreamsAnalysis.R"
-# specify workingDir to your working directory path
-#run code to reproduce figures and analysis
+# to run: R session option
+# clone the git repository, and download all data and scripts into the same directory per the readme.
+# start R session and set working directory to the this directory
+# `source` top level R script: source(smallStreamsAnalysis.R) to reproduce figures and analysis
 
-# fieldwork_analysis.R
-# George Allen, Oct 2017
+# Original: George Allen, Oct 2017
+# Modified: Eric Barefoot, Nov 2018
 
 ########################################################
-# install and load  necessary libraries
+# install and load necessary libraries
 
 packages = c('here', 'devtools', 'foreign', 'MASS', 'shapefiles')
 
@@ -43,7 +46,7 @@ gitPak(gitPackages, gitPackagePaths)
 #############################################################################################
 # Load required packages
 
-require(here) # for easy relative path management.
+require(here)   # for easy relative path management.
 require(docopt) # for passing arguments from command line.
 
 # command line usage information
@@ -54,19 +57,20 @@ usage:  smallStreamsAnalysis.r [options]
 options:
   --fig1_2       Generate figures 1 and 2.
   --fig3         Generate figure 3.
-  --fig4         Generate figure 4 and table 1.
+  --fig4         Generate draft figure 4 and table 1.
   --EDtab1_2     Generate supplementary tables 1 and 2.
   --EDtab3_fig2  Generate supplementary table 3 and figure 2.
-  --EDtab4       Generate supplementary table 4.
   --help         Usage.
 ' -> doc
+
+# If no options are specified, then it is assumed the user wants to recreate all analyses.
 
 opts = docopt(doc)
 
 #############################################################################################
 # Define input parameters:
 
-# data table file names:
+# data table file names and relative paths:
 
 data_folders = c('locationStreamSurveys', 'repeatStreamSurveys', 'streamWidthModelOutput')
 
@@ -77,6 +81,8 @@ dataNames = c('konza', 'sagehen', 'angelo', 'caribou', 'v40', 'blueduck', 'stony
 
 inTabPaths = here('data', dataNames, 'field',  paste0(dataNames, '_field_dat.csv'))
 
+# pass message for missing data files
+
 if (F %in% file.exists(inTabPaths)){message("Field Data CSV files are missing")}
 
 # figure labels:
@@ -86,15 +92,17 @@ tabNames = c('Konza', 'Sagehen', 'Angelo', "Caribou", "V40", "Blue Duck", "Stony
 
 # make sure folders exist for outputs
 
-if(!file.exists(here('figures'))) {dir.create(here('figures')); message("'figures' directory did not exist. Creating...")} # checks for "figures" folder and creates it if it doesnt exist.
-if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' directory did not exist. Creating...")} # checks for "tables" folder and creates it if it doesnt exist.
+# checks for "figures" folder and creates it if it doesnt exist.
+if(!file.exists(here('figures'))) {dir.create(here('figures')); message("'figures' directory did not exist. Creating...")}
+# checks for "tables" folder and creates it if it doesnt exist.
+if(!file.exists(here('tables'))) {dir.create(here('tables')); message("'tables' directory did not exist. Creating...")}
 
 #############################################################################################
 # Figure Scripts:
 
-# Figures 1 and 2- stream width map generator:
+# Figures 1 and 2 - stream width map generator:
 # Makes a preliminary draft figure, which was later annotated manually in Adobe Illustrator and ArcGIS.
-# Figure 2 is comprised of the bottom half of the draft figure.
+# Figure 2 is the bottom half of the draft figure.
 if (opts$fig1_2 | all(!unlist(opts))) {
   message('compiling figures 1 and 2...')
   source(here('fig1_2_widthMap.R'))
@@ -111,6 +119,8 @@ if (opts$fig3 | all(!unlist(opts))) {
 }
 
 # Figure 4 - modeled stream widths:
+# Figure four relies on model output paired with manually created conceptual figures.
+# Therefore, the version presented here comprises just the model outputs. A final version of all these figures is available in the `~/figures/publication` directory
 if (opts$fig4 | all(!unlist(opts))) {
   message('compiling figure 4 and table 1...')
   source(here('fig4_widthModel.R'))
@@ -143,8 +153,8 @@ if (opts$EDtab3_fig2 | all(!unlist(opts))) {
   csvOut = here('tables', 'EDtable3_GOF.csv')
   EDfig2_EDtab3_GOF(inTabPaths, modTabDir, tabNames, pdfOut, csvOut)
 }
-# is there a script for this?
-# # ED table 4 - efflux calculation:
-# source(here('EDtable3.R'))
-# csvOut = here('tables', 'EDtable3.csv')
-# EDtable4(inTabPaths, tabNames, csvOut, workingDir)
+
+# ED Table 3 - Carbon dioxide efflux calculation attributes
+# Calculated and aggregated manually through Microsoft Excel
+
+#############################################################################################
